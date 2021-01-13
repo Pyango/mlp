@@ -1,0 +1,7 @@
+name: base
+channels:
+  - conda-forge
+dependencies:
+  - python=3.9.1
+  - numpy=1.19.5
+  - Cython=0.29.21
