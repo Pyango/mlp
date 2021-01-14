@@ -1,0 +1,11 @@
+version: '3.8'
+services:
+  app:
+    image: pyango/mlp:latest
+    build:
+      context: .
+    command: "/usr/sbin/sshd -D"
+    volumes:
+      - .:/app
+    ports:
+      - "49249:22"
