@@ -18,11 +18,20 @@ class Attribute:
     def __add__(self, other):
         return self.value + other
 
+    def __sub__(self, other):
+        return self.value - other
+
+    def __rsub__(self, other):
+        return other - self.value
+
+    def __abs__(self):
+        return self.value
+
     def __mul__(self, other):
         return self.value * other
 
     def __rmul__(self, other):
-        return self.value * other
+        return other * self.value
 
     def clamp(self, value):
         return max(min(value, self.max_value), self.min_value)

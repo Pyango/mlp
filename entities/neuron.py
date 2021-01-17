@@ -11,7 +11,7 @@ class Neuron:
             min_value=-30,
         )
         self.activation_function = activation_function
-        self.value = None
+        self.value = 1
         self.connections = {}
 
     def activate(self):
@@ -21,3 +21,10 @@ class Neuron:
         return self.activation_function(
             sum(results)
         )
+
+    def distance(self, other_neuron):
+        """
+        The genetic distance from this neuron to the other based on the bias and value (response)
+        """
+        # TODO: Update to compute differences when dealing with different activation functions as well
+        return abs(self.bias - other_neuron.bias) + abs(self.value - other_neuron.value)

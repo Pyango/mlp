@@ -1,4 +1,4 @@
-from entities.genome import Genome
+from entities.population import Population
 
 xor = [
     [0, 0, 0, 0],
@@ -11,15 +11,20 @@ xor = [
     [1, 1, 1, 1],
 ]
 
-new_genome = Genome(
-    key=1,
+population = Population(
     num_inputs=3,
     num_outputs=1,
+    fitness_threshold=3.99,
+    initial_fitness=4.0,
 )
 
-while True:
-    for i in xor:
-        result = new_genome.activate(i[:3])
-        new_genome.mutate()
-        new_genome.fitness -= (result[0] - i[-1]) ** 2
-        print(f'Fitness: {new_genome.fitness}')
+
+def compute_fitness(genomes):
+    for genome_key, genome in genomes:
+        for i in xor:
+            result = genome.activate(i[:3])
+            genome.fitness -= (result[0] - i[-1]) ** 2
+        genome.mutate()
+
+
+population.run(compute_fitness)
