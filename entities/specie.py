@@ -20,10 +20,12 @@ class DistanceCache:
 
 
 class Specie:
-    def __init__(self, genomes):
+    def __init__(self, key, genomes):
+        self.key = key
         self.genomes = genomes
+        self.adjusted_fitness = None
 
     @property
-    def adjusted_fitness(self):
+    def avg_fitness(self):
         combined_fitness = sum([g.fitness for g in self.genomes.values()])
         return combined_fitness / len(self.genomes)

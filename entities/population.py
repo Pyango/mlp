@@ -1,7 +1,6 @@
-from itertools import groupby
-
 from entities.genome import Genome
 from entities.specie import Specie, DistanceCache
+from entities.utils import mean
 
 
 class Population:
@@ -46,39 +45,34 @@ class Population:
 
             distances = DistanceCache()
             self.species = {}
+            genome_to_species = {}
             for g in self.genomes.values():
-                sk = self.get_new_specie_key()
-                self.species[sk] = Specie({
-                    g.key: g,
-                })
+                if g.key not in genome_to_species:
+                    sk = self.get_new_specie_key()
+                    specie = Specie(key=sk, genomes={
+                        g.key: g,
+                    })
+                    self.species[sk] = specie
+                    genome_to_species[g.key] = specie.key
+                else:
+                    specie = self.species[genome_to_species[g.key]]
                 for og in self.genomes.values():
                     distance = distances(g, og)
                     if distance <= self.compatibility_threshold:
-                        self.species[sk].genomes[og.key] = og
-                # here
-                if len(self.species[sk].genomes) <= 1:
-                    del self.species[sk]
+                        specie.genomes[og.key] = og
+                        genome_to_species[og.key] = specie.key
 
-            # species = {}
-            # for g in self.genomes.values():
-            #     for og in self.genomes.values():
-            #         distance = distances(g, og)
-            #         if distance > self.compatibility_threshold:
-            #             continue
-            #         for s in species.values():
-            #             if g.key in s.genomes:
-            #                 s.genomes[og.key] = og
-            #             elif og.key in s.genomes:
-            #                 s.genomes[g.key] = g
-            #         else:
-            #             sk = self.get_new_specie_key()
-            #             species[sk] = Specie({
-            #                 g.key: g,
-            #                 og.key: og,
-            #             })
-            #     print()  # put a breakpoint here, i can't do it
-            # How to make species out of them?
-            # for key, group in groupby(map(lambda x: Distance(*x), distances)):
-            #     genomes = {el.genome1.key: el.genome1 for el in group}
-            #     species.append(Specie(genomes))
-            print()
+            all_fitnesses = [g.fitness for g in self.genomes.values()]
+            min_fitness = min(all_fitnesses)
+            max_fitness = max(all_fitnesses)
+            # Do not allow the fitness range to be zero, as we divide by it below.
+            # TODO: The ``1.0`` below is rather arbitrary, and should be configurable.
+            fitness_range = max(1.0, max_fitness - min_fitness)
+            for afs in self.species.values():
+                # Compute adjusted fitness.
+                msf = mean([m.fitness for m in afs.genomes.values()])
+                af = (msf - min_fitness) / fitness_range
+                afs.adjusted_fitness = af
+            adjusted_fitnesses = [s.adjusted_fitness for s in self.species.values()]
+            avg_adjusted_fitness = mean(adjusted_fitnesses)  # type: float
+            print(f'Number of species {len(self.species)}, avg adj fitness {avg_adjusted_fitness}')
