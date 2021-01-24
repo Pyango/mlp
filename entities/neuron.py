@@ -3,7 +3,7 @@ from entities.attribute import Attribute
 
 
 class Neuron:
-    def __init__(self, key, bias=1.0, activation_function=sigmoid):
+    def __init__(self, key, bias=.5, activation_function=sigmoid):
         self.key = key
         self.bias = Attribute(
             value=bias,
@@ -22,9 +22,9 @@ class Neuron:
             del connection
 
     def activate(self):
-        results = []
+        results = [self.bias]
         for c in self.connections.values():
-            results.append((c.input_neurone.value + self.bias) * c.weight)
+            results.append(c.input_neurone.value * c.weight)
         result = self.activation_function(
             sum(results)
         )

@@ -10,8 +10,8 @@ class Genome:
     adjusted_fitness = None
     neuron_add_prob = .1
     neuron_delete_prob = .1
-    conn_add_prob = .5
-    conn_delete_prob = .5
+    conn_add_prob = .1
+    conn_delete_prob = .1
 
     def __lt__(self, other):
         return self.adjusted_fitness < other
@@ -58,7 +58,7 @@ class Genome:
 
     @property
     def neurones(self):
-        return self.hidden_neurones | self.input_neurones | self.output_neurones
+        return {**self.hidden_neurones, **self.input_neurones, **self.output_neurones}
 
     def activate(self, inputs):
         # Set all the values of the input neurones
