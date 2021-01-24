@@ -23,7 +23,6 @@ class Specie:
     def __init__(self, key, genomes):
         self.key = key
         self.genomes = genomes
-        self.adjusted_fitness = None
 
     @property
     def avg_fitness(self):

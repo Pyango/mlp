@@ -1,18 +1,7 @@
-from entities.population import Population
-
-xor = [
-    [0, 0, 0, 0],
-    [0, 0, 1, 1],
-    [0, 1, 0, 1],
-    [0, 1, 1, 0],
-    [1, 0, 0, 1],
-    [1, 0, 1, 0],
-    [1, 1, 0, 0],
-    [1, 1, 1, 1],
-]
+from entities.population import Population, xor2
 
 population = Population(
-    num_inputs=3,
+    num_inputs=2,
     num_outputs=1,
     fitness_threshold=3.99,
     initial_fitness=4.0,
@@ -21,10 +10,10 @@ population = Population(
 
 def compute_fitness(genomes):
     for genome_key, genome in genomes:
-        for i in xor:
-            result = genome.activate(i[:3])
-            genome.fitness -= (result[0] - i[-1]) ** 2
-        genome.mutate()
+        genome.fitness = 4.0
+        for i in xor2:
+            result = genome.activate(i[:2])
+            genome.fitness -= abs(result[0] - i[-1])
 
 
 population.run(compute_fitness)

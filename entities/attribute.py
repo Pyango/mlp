@@ -18,6 +18,9 @@ class Attribute:
     def __add__(self, other):
         return self.value + other
 
+    def __radd__(self, other):
+        return other + self.value
+
     def __sub__(self, other):
         return self.value - other
 
@@ -32,6 +35,9 @@ class Attribute:
 
     def __rmul__(self, other):
         return other * self.value
+
+    def __str__(self):
+        return str(self.value)
 
     def clamp(self, value):
         return max(min(value, self.max_value), self.min_value)

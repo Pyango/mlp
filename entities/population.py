@@ -1,12 +1,29 @@
 from entities.genome import Genome
 from entities.specie import Specie, DistanceCache
-from entities.utils import mean
+
+xor2 = [
+    [0.0, 0.0, 0.0],
+    [0.0, 1.0, 1.0],
+    [1.0, 0.0, 1.0],
+    [1.0, 1.0, 0.0],
+]
+
+xor3 = [
+    [0, 0, 0, 0],
+    [0, 0, 1, 1],
+    [0, 1, 0, 1],
+    [0, 1, 1, 0],
+    [1, 0, 0, 1],
+    [1, 0, 1, 0],
+    [1, 1, 0, 0],
+    [1, 1, 1, 1],
+]
 
 
 class Population:
-    compatibility_threshold = .1
+    compatibility_threshold = 2
 
-    def __init__(self, num_inputs, num_outputs, initial_fitness, fitness_threshold, size=100):
+    def __init__(self, num_inputs, num_outputs, initial_fitness, fitness_threshold, size=150):
         self.size = size
         self.initial_fitness = initial_fitness
         self.fitness_threshold = fitness_threshold
@@ -33,6 +50,7 @@ class Population:
 
     def run(self, compute_fitness, generations=300):
         for generation in range(generations):
+            # Execute the custom implemented fitness function from the developer
             compute_fitness(self.genomes.items())
 
             best = None
@@ -42,6 +60,8 @@ class Population:
 
             print(f'And the best genome is: {best.key} with a fitness of {best.fitness}'
                   f' and a complexity of {best.complexity}')
+            for i in xor2:
+                print(f'{i} -> {best.activate(i[:3])}')
 
             distances = DistanceCache()
             self.species = {}
@@ -62,17 +82,23 @@ class Population:
                         specie.genomes[og.key] = og
                         genome_to_species[og.key] = specie.key
 
-            all_fitnesses = [g.fitness for g in self.genomes.values()]
-            min_fitness = min(all_fitnesses)
-            max_fitness = max(all_fitnesses)
-            # Do not allow the fitness range to be zero, as we divide by it below.
-            # TODO: The ``1.0`` below is rather arbitrary, and should be configurable.
-            fitness_range = max(1.0, max_fitness - min_fitness)
-            for afs in self.species.values():
-                # Compute adjusted fitness.
-                msf = mean([m.fitness for m in afs.genomes.values()])
-                af = (msf - min_fitness) / fitness_range
-                afs.adjusted_fitness = af
-            adjusted_fitnesses = [s.adjusted_fitness for s in self.species.values()]
-            avg_adjusted_fitness = mean(adjusted_fitnesses)  # type: float
-            print(f'Number of species {len(self.species)}, avg adj fitness {avg_adjusted_fitness}')
+            # Compute adjusted fitness for each genome in each specie
+            for specie in self.species.values():
+                for genome in specie.genomes.values():
+                    genome.adjusted_fitness = genome.fitness / len(specie.genomes)
+
+            species_avg_fitness = [s.avg_fitness for s in self.species.values()]
+            print(f'Number of species {len(self.species)}')
+
+            # Mutate the best 10% - 20% of all genomes
+            genomes = sorted([g for g in self.genomes.values()], reverse=True)
+            top_genomes = genomes[int(len(genomes) * .1): int(len(genomes) * .2)]
+            for g in top_genomes:
+                g.mutate()
+
+            # Mutate the worst 10% genomes
+            genomes = sorted([g for g in self.genomes.values()], reverse=False)
+            bad_genomes = genomes[int(len(genomes) * .0): int(len(genomes) * .10)]
+            for g in bad_genomes:
+                g.mutate()
+            print()
