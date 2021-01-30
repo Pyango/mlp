@@ -1,5 +1,5 @@
 from random import random, choice
-
+from graphviz import Digraph
 from entities.connection import Connection
 from entities.neuron import Neuron
 
@@ -8,10 +8,13 @@ class Genome:
     # Static config variables go here
     compatibility_disjoint_coefficient = 1
     adjusted_fitness = None
-    neuron_add_prob = .1
-    neuron_delete_prob = .1
-    conn_add_prob = .1
+    neuron_add_prob = .05
+    neuron_delete_prob = .001
+    conn_add_prob = .2
     conn_delete_prob = .1
+
+    def __repr__(self):
+        return f"Genome {self.key}\n## Neurones\n{self.neurones}\n## Connections\n{self.connections})"
 
     def __lt__(self, other):
         return self.adjusted_fitness < other
@@ -56,6 +59,18 @@ class Genome:
                 output_neurone.connections[connection.key] = connection
                 self.connections[connection.key] = connection
 
+    def show(self):
+        dot = Digraph(format='png', engine='neato', node_attr={'shape': 'circle'})
+        for n in self.input_neurones.values():
+            dot.node(str(n.key), f'In {n.key}\n{round(n.bias, 2)}', pos=f'{abs(n.key)},3!')
+        for n in self.output_neurones.values():
+            dot.node(str(n.key), f'Out {n.key}\n{round(n.bias, 2)}', pos=f'{abs(n.key)},0!')
+        for n in self.hidden_neurones.values():
+            dot.node(str(n.key), f'{n.key}\n{round(n.bias, 2)}')
+        for key, c in self.connections.items():
+            dot.edge(str(c.input_neurone.key), str(c.output_neurone.key), label=f'{round(c.weight, 2)}')
+        dot.render('./network', view=False)
+
     @property
     def neurones(self):
         return {**self.hidden_neurones, **self.input_neurones, **self.output_neurones}
@@ -92,6 +107,7 @@ class Genome:
             **kwargs,
         )
         self.connections[c.key] = c
+        output_neurone.connections[c.key] = c
         return c
 
     def mutate_add_neurone(self):

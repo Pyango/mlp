@@ -12,10 +12,13 @@ class Connection:
             value=weight,
             max_value=30,
             min_value=-30,
+            mutate_rate=0.6,
             mutate_power=0.5,
-            mutate_rate=0.8,
             replace_rate=0.1,
         )
+
+    def __repr__(self):
+        return self.__str__()
 
     def __str__(self):
         return f'{self.input_neurone.key} -> {self.output_neurone.key} | {self.weight.value}'

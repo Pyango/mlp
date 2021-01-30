@@ -3,19 +3,22 @@ from entities.attribute import Attribute
 
 
 class Neuron:
-    def __init__(self, key, bias=.5, activation_function=sigmoid):
+    def __init__(self, key, bias=1, activation_function=sigmoid):
         self.key = key
         self.bias = Attribute(
             value=bias,
             max_value=30,
             min_value=-30,
-            mutate_rate=0.7,
-            replace_rate=0.1,
+            mutate_rate=0.6,
             mutate_power=0.5,
+            replace_rate=0.1,
         )
         self.activation_function = activation_function
-        self.value = 1
+        self.value = 0
         self.connections = {}
+
+    def __repr__(self):
+        return f"""Neuron(Key: {self.key}, Bias: {self.bias})"""
 
     def __del__(self):
         for connection in self.connections:
@@ -25,10 +28,7 @@ class Neuron:
         results = [self.bias]
         for c in self.connections.values():
             results.append(c.input_neurone.value * c.weight)
-        result = self.activation_function(
-            sum(results)
-        )
-        return result
+        return self.activation_function(sum(results))
 
     def distance(self, other_neuron):
         """

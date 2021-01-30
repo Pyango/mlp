@@ -6,6 +6,8 @@ RUN apk add --no-cache \
     git \
     openssh \
     gcc \
+    graphviz \
+    ttf-dejavu \
     musl-dev
 
 

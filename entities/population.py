@@ -19,14 +19,30 @@ xor3 = [
     [1, 1, 1, 1],
 ]
 
+xand = [
+    [0, 0, 1],
+    [0, 1, 0],
+    [1, 0, 0],
+    [1, 1, 1],
+]
+
+nand = [
+    [0, 0, 0],
+    [0, 1, 0],
+    [1, 0, 0],
+    [1, 1, 1],
+]
+
 
 class Population:
     compatibility_threshold = 2
 
-    def __init__(self, num_inputs, num_outputs, initial_fitness, fitness_threshold, size=150):
+    def __init__(self, num_inputs, num_outputs, initial_fitness, fitness_threshold, size=100):
         self.size = size
         self.initial_fitness = initial_fitness
         self.fitness_threshold = fitness_threshold
+        self.num_inputs = num_inputs
+        self.num_outputs = num_outputs
         self.genomes = {}
         self.species = {}
         for i in range(self.size):
@@ -48,7 +64,7 @@ class Population:
             return max(self.species.keys()) + 1
         return 1
 
-    def run(self, compute_fitness, generations=300):
+    def run(self, compute_fitness, generations=3000):
         for generation in range(generations):
             # Execute the custom implemented fitness function from the developer
             compute_fitness(self.genomes.items())
@@ -57,11 +73,17 @@ class Population:
             for g in self.genomes.values():
                 if best is None or g.fitness > best.fitness:
                     best = g
-
+            print(f'Generation: {generation}')
             print(f'And the best genome is: {best.key} with a fitness of {best.fitness}'
-                  f' and a complexity of {best.complexity}')
+                  f' and a complexity of {best.complexity} and adj fitness {best.adjusted_fitness}')
+
+            best.show()
+            print(best)
             for i in xor2:
-                print(f'{i} -> {best.activate(i[:3])}')
+                print(f'{i} -> {best.activate(i[:2])}')
+
+            if best.fitness >= self.fitness_threshold:
+                break
 
             distances = DistanceCache()
             self.species = {}
@@ -92,7 +114,7 @@ class Population:
 
             # Mutate the best 10% - 20% of all genomes
             genomes = sorted([g for g in self.genomes.values()], reverse=True)
-            top_genomes = genomes[int(len(genomes) * .1): int(len(genomes) * .2)]
+            top_genomes = genomes[int(len(genomes) * .2): int(len(genomes) * .3)]
             for g in top_genomes:
                 g.mutate()
 

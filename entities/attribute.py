@@ -39,6 +39,9 @@ class Attribute:
     def __str__(self):
         return str(self.value)
 
+    def __round__(self, n=None):
+        return round(self.value, n)
+
     def clamp(self, value):
         return max(min(value, self.max_value), self.min_value)
 

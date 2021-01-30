@@ -1,4 +1,4 @@
-from entities.population import Population, xor2
+from entities.population import Population, xor2, xand, nand
 
 population = Population(
     num_inputs=2,
@@ -13,7 +13,7 @@ def compute_fitness(genomes):
         genome.fitness = 4.0
         for i in xor2:
             result = genome.activate(i[:2])
-            genome.fitness -= abs(result[0] - i[-1])
+            genome.fitness -= (result[0] - i[-1]) ** 2
 
 
 population.run(compute_fitness)
