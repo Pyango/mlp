@@ -1,3 +1,4 @@
+import math
 from random import random, gauss
 
 
@@ -40,7 +41,21 @@ class Attribute:
         return str(self.value)
 
     def __round__(self, n=None):
-        return round(self.value, n)
+        return self.truncate(n)
+
+    def truncate(self, decimals=3):
+        """
+        Returns a value truncated to a specific number of decimal places.
+        """
+        if not isinstance(decimals, int):
+            raise TypeError("decimal places must be an integer.")
+        elif decimals < 0:
+            raise ValueError("decimal places has to be 0 or more.")
+        elif decimals == 0:
+            return math.trunc(self.value)
+
+        factor = 10.0 ** decimals
+        return math.trunc(self.value * factor) / factor
 
     def clamp(self, value):
         return max(min(value, self.max_value), self.min_value)

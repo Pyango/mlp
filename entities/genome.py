@@ -1,5 +1,7 @@
 from random import random, choice
+
 from graphviz import Digraph
+
 from entities.connection import Connection
 from entities.neuron import Neuron
 
@@ -12,6 +14,7 @@ class Genome:
     neuron_delete_prob = .001
     conn_add_prob = .2
     conn_delete_prob = .1
+    generation = 0
 
     def __repr__(self):
         return f"Genome {self.key}\n## Neurones\n{self.neurones}\n## Connections\n{self.connections})"
@@ -60,16 +63,16 @@ class Genome:
                 self.connections[connection.key] = connection
 
     def show(self):
-        dot = Digraph(format='png', engine='neato', node_attr={'shape': 'circle'})
+        dot = Digraph(format='png')
         for n in self.input_neurones.values():
-            dot.node(str(n.key), f'In {n.key}\n{round(n.bias, 2)}', pos=f'{abs(n.key)},3!')
+            dot.node(str(n.key), f'In {round(n.value, 2)}\n{round(n.bias, 2)}')
         for n in self.output_neurones.values():
-            dot.node(str(n.key), f'Out {n.key}\n{round(n.bias, 2)}', pos=f'{abs(n.key)},0!')
+            dot.node(str(n.key), f'Out {round(n.value, 2)}\n{round(n.bias, 2)}')
         for n in self.hidden_neurones.values():
-            dot.node(str(n.key), f'{n.key}\n{round(n.bias, 2)}')
+            dot.node(str(n.key), f'{round(n.value, 2)}\n{round(n.bias, 2)}')
         for key, c in self.connections.items():
             dot.edge(str(c.input_neurone.key), str(c.output_neurone.key), label=f'{round(c.weight, 2)}')
-        dot.render('./network', view=False)
+        dot.render(f'./network-{self.key}', view=False)
 
     @property
     def neurones(self):
@@ -79,6 +82,9 @@ class Genome:
         # Set all the values of the input neurones
         for input_value, input_neurone in zip(inputs, self.input_neurones.values()):
             input_neurone.value = input_value
+
+        for n in self.hidden_neurones.values():
+            n.activate()
 
         outputs = []
         for output_neurone in self.output_neurones.values():
@@ -146,9 +152,11 @@ class Genome:
         possible_outputs = list(self.hidden_neurones.values()) + list(self.output_neurones.values())
         output_neurone = choice(possible_outputs)
 
-        # Don't duplicate connections.
-        key = (input_neurone.key, output_neurone.key)
-        if key in self.connections.keys():
+        # Don't allow connections to the same neurone because its not supported yet
+        if input_neurone.key == output_neurone.key:
+            return
+        # Don't duplicate connections and avoid same neurone connections
+        if (input_neurone.key, output_neurone.key) in self.connections.keys():
             return
         self.create_connection(input_neurone, output_neurone)
 
@@ -239,3 +247,20 @@ class Genome:
         (number of neurones, number of connections)
         """
         return len(self.neurones), len(self.connections)
+
+    def crossover(self, genome1, genome2):
+        """ Configure a new genome by crossover from two parent genomes. """
+        if genome1.fitness > genome2.fitness:
+            parent1, parent2 = genome1, genome2
+        else:
+            parent1, parent2 = genome2, genome1
+
+        for key, neurone1 in parent1.neurones.items():
+            neurone2 = parent2.neurones.get(key)
+            assert key not in self.neurones
+            if neurone2 is None:
+                # Extra gene: copy from the fittest parent
+                self.neurones[key] = neurone1.copy()
+            else:
+                # Homologous gene: combine genes from both parents.
+                self.neurones[key] = neurone1.crossover(neurone2)

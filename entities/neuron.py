@@ -28,7 +28,8 @@ class Neuron:
         results = [self.bias]
         for c in self.connections.values():
             results.append(c.input_neurone.value * c.weight)
-        return self.activation_function(sum(results))
+        self.value = self.activation_function(sum(results))
+        return self.value
 
     def distance(self, other_neuron):
         """
@@ -39,3 +40,10 @@ class Neuron:
 
     def mutate(self):
         self.bias.mutate_value()
+
+    def copy(self):
+        return self.__class__(
+            key=self.key,
+            bias=self.bias.value,
+            activation_function=self.activation_function,
+        )

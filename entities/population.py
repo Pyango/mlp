@@ -36,6 +36,7 @@ nand = [
 
 class Population:
     compatibility_threshold = 2
+    survival_threshold = 5
 
     def __init__(self, num_inputs, num_outputs, initial_fitness, fitness_threshold, size=100):
         self.size = size
@@ -64,7 +65,7 @@ class Population:
             return max(self.species.keys()) + 1
         return 1
 
-    def run(self, compute_fitness, generations=3000):
+    def run(self, compute_fitness, generations=300):
         for generation in range(generations):
             # Execute the custom implemented fitness function from the developer
             compute_fitness(self.genomes.items())
@@ -77,7 +78,6 @@ class Population:
             print(f'And the best genome is: {best.key} with a fitness of {best.fitness}'
                   f' and a complexity of {best.complexity} and adj fitness {best.adjusted_fitness}')
 
-            best.show()
             print(best)
             for i in xor2:
                 print(f'{i} -> {best.activate(i[:2])}')
@@ -89,6 +89,9 @@ class Population:
             self.species = {}
             genome_to_species = {}
             for g in self.genomes.values():
+                g.generation += 1
+                if g.complexity[0] > 3 and g.complexity[1] > 4:
+                    g.show()
                 if g.key not in genome_to_species:
                     sk = self.get_new_specie_key()
                     specie = Specie(key=sk, genomes={
@@ -110,17 +113,19 @@ class Population:
                     genome.adjusted_fitness = genome.fitness / len(specie.genomes)
 
             species_avg_fitness = [s.avg_fitness for s in self.species.values()]
-            print(f'Number of species {len(self.species)}')
+            print(f'Number of species {len(self.species)}, Species avg fitness = {species_avg_fitness}')
 
             # Mutate the best 10% - 20% of all genomes
-            genomes = sorted([g for g in self.genomes.values()], reverse=True)
+            genomes = sorted([g for g in self.genomes.values() if g.generation >= self.survival_threshold], reverse=True)
             top_genomes = genomes[int(len(genomes) * .2): int(len(genomes) * .3)]
             for g in top_genomes:
                 g.mutate()
+                g.generation = 0
 
             # Mutate the worst 10% genomes
-            genomes = sorted([g for g in self.genomes.values()], reverse=False)
+            genomes = sorted([g for g in self.genomes.values() if g.generation >= self.survival_threshold], reverse=False)
             bad_genomes = genomes[int(len(genomes) * .0): int(len(genomes) * .10)]
             for g in bad_genomes:
                 g.mutate()
+                g.generation = 0
             print()

@@ -29,3 +29,10 @@ class Connection:
     def distance(self, other):
         d = abs(self.weight - other.weight)
         return d * self.compatibility_weight_coefficient
+
+    def copy(self, input_neurone, output_neurone):
+        return self.__class__(
+            input_neurone=input_neurone,
+            output_neurone=output_neurone,
+            weight=self.weight.value,
+        )
