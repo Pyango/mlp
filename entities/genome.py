@@ -1,4 +1,5 @@
 from random import random, choice
+from math import trunc
 
 from graphviz import Digraph
 
@@ -15,6 +16,7 @@ class Genome:
     conn_add_prob = .2
     conn_delete_prob = .1
     generation = 0
+    ancestors = None
 
     def __repr__(self):
         return f"Genome {self.key}\n## Neurones\n{self.neurones}\n## Connections\n{self.connections})"
@@ -56,8 +58,8 @@ class Genome:
         for input_neurone in self.input_neurones.values():
             for output_neurone in self.output_neurones.values():
                 connection = Connection(
-                    input_neurone=input_neurone,
-                    output_neurone=output_neurone,
+                    input_key=input_neurone.key,
+                    output_key=output_neurone.key,
                 )
                 output_neurone.connections[connection.key] = connection
                 self.connections[connection.key] = connection
@@ -65,13 +67,13 @@ class Genome:
     def show(self):
         dot = Digraph(format='png')
         for n in self.input_neurones.values():
-            dot.node(str(n.key), f'In {round(n.value, 2)}\n{round(n.bias, 2)}')
+            dot.node(str(n.key), f'In K={n.key}\nV={trunc(n.value * 100) / 100}')
         for n in self.output_neurones.values():
-            dot.node(str(n.key), f'Out {round(n.value, 2)}\n{round(n.bias, 2)}')
+            dot.node(str(n.key), f'Out K={n.key}\nV={trunc(n.value * 100) / 100}\nB={trunc(n.bias*100)/100}')
         for n in self.hidden_neurones.values():
-            dot.node(str(n.key), f'{round(n.value, 2)}\n{round(n.bias, 2)}')
+            dot.node(str(n.key), f'K={n.key}\nV={trunc(n.value * 100) / 100}\nB={trunc(n.bias*100)/100}')
         for key, c in self.connections.items():
-            dot.edge(str(c.input_neurone.key), str(c.output_neurone.key), label=f'{round(c.weight, 2)}')
+            dot.edge(str(c.input_key), str(c.output_key), label=f'W={trunc(c.weight*100)/100}')
         dot.render(f'./network-{self.key}', view=False)
 
     @property
@@ -83,12 +85,22 @@ class Genome:
         for input_value, input_neurone in zip(inputs, self.input_neurones.values()):
             input_neurone.value = input_value
 
-        for n in self.hidden_neurones.values():
-            n.activate()
+        for key in sorted(self.hidden_neurones.keys()):
+            current_neurone = self.hidden_neurones[key]
+            results = [current_neurone.bias]
+            for c in self.connections.values():
+                if c.output_key == current_neurone.key:
+                    results.append(self.neurones[c.input_key].value * c.weight)
+            current_neurone.value = current_neurone.activation_function(sum(results))
 
         outputs = []
         for output_neurone in self.output_neurones.values():
-            outputs.append(output_neurone.activate())
+            results = [output_neurone.bias]
+            for c in self.connections.values():
+                if c.output_key == output_neurone.key:
+                    results.append(self.neurones[c.input_key].value * c.weight)
+            output_neurone.value = output_neurone.activation_function(sum(results))
+            outputs.append(output_neurone.value)
         return outputs
 
     def get_new_neurone_key(self):
@@ -106,14 +118,13 @@ class Genome:
         self.hidden_neurones[neurone.key] = neurone
         return neurone
 
-    def create_connection(self, input_neurone, output_neurone, **kwargs):
+    def create_connection(self, input_key, output_key, **kwargs):
         c = Connection(
-            input_neurone=input_neurone,
-            output_neurone=output_neurone,
+            input_key=input_key,
+            output_key=output_key,
             **kwargs,
         )
         self.connections[c.key] = c
-        output_neurone.connections[c.key] = c
         return c
 
     def mutate_add_neurone(self):
@@ -123,13 +134,13 @@ class Genome:
         connection_to_split = choice(list(self.connections.values()))
         new_neuron = self.create_neuron()
         self.create_connection(
-            input_neurone=connection_to_split.input_neurone,
-            output_neurone=new_neuron,
+            input_key=connection_to_split.input_key,
+            output_key=new_neuron.key,
             weight=connection_to_split.weight.value,
         )
         self.create_connection(
-            input_neurone=new_neuron,
-            output_neurone=connection_to_split.output_neurone,
+            input_key=new_neuron.key,
+            output_key=connection_to_split.output_key,
             weight=connection_to_split.weight.value,
         )
         # Delete old connection
@@ -138,6 +149,12 @@ class Genome:
     def mutate_delete_neurone(self):
         if self.hidden_neurones:
             del_key = choice(list(self.hidden_neurones.keys()))
+            connections_to_delete = []
+            for ck in self.connections.keys():
+                if del_key in ck:
+                    connections_to_delete.append(ck)
+            for ck in connections_to_delete:
+                del self.connections[ck]
             del self.hidden_neurones[del_key]
 
     def mutate_add_connection(self):
@@ -155,10 +172,10 @@ class Genome:
         # Don't allow connections to the same neurone because its not supported yet
         if input_neurone.key == output_neurone.key:
             return
-        # Don't duplicate connections and avoid same neurone connections
+        # Don't duplicate connections
         if (input_neurone.key, output_neurone.key) in self.connections.keys():
             return
-        self.create_connection(input_neurone, output_neurone)
+        self.create_connection(input_neurone.key, output_neurone.key)
 
     def mutate_delete_connection(self):
         if self.connections:
@@ -255,12 +272,22 @@ class Genome:
         else:
             parent1, parent2 = genome2, genome1
 
-        for key, neurone1 in parent1.neurones.items():
-            neurone2 = parent2.neurones.get(key)
-            assert key not in self.neurones
+        for key, neurone1 in parent1.hidden_neurones.items():
+            neurone2 = parent2.hidden_neurones.get(key)
+            assert key not in self.hidden_neurones
             if neurone2 is None:
                 # Extra gene: copy from the fittest parent
-                self.neurones[key] = neurone1.copy()
+                self.hidden_neurones[key] = neurone1.copy()
             else:
                 # Homologous gene: combine genes from both parents.
-                self.neurones[key] = neurone1.crossover(neurone2)
+                self.hidden_neurones[key] = neurone1.crossover(neurone2)
+
+        for key, connection1 in parent1.connections.items():
+            connection2 = parent2.connections.get(key)
+            if connection2 is None:
+                # Excess or disjoint gene: copy from the fittest parent.
+                self.connections[key] = connection1.copy()
+            else:
+                # Homologous gene: combine genes from both parents.
+                self.connections[key] = connection1.crossover(connection2)
+        self.ancestors = [parent1, parent2]

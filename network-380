@@ -1,0 +1,19 @@
+digraph {
+	-1 [label="In K=-1
+V=1.0"]
+	-2 [label="In K=-2
+V=1.0"]
+	1 [label="Out K=1
+V=0.07
+B=0.97"]
+	2 [label="K=2
+V=0.65
+B=1.26"]
+	3 [label="K=3
+V=0.88
+B=1.0"]
+	-2 -> 1 [label="W=-0.91"]
+	2 -> 3 [label="W=-1.71"]
+	3 -> 1 [label="W=-2.23"]
+	-2 -> 3 [label="W=1.0"]
+}

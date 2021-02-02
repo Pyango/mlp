@@ -3,7 +3,7 @@ from entities.population import Population, xor2, xand, nand
 population = Population(
     num_inputs=2,
     num_outputs=1,
-    fitness_threshold=3.99,
+    fitness_threshold=3.5,
     initial_fitness=4.0,
 )
 
