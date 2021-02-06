@@ -14,7 +14,7 @@ class Connection:
             value=weight,
             max_value=30,
             min_value=-30,
-            mutate_rate=0.6,
+            mutate_rate=0.3,
             mutate_power=0.8,
             replace_rate=0.1,
         )

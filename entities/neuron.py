@@ -11,13 +11,14 @@ class Neuron:
             value=bias,
             max_value=30,
             min_value=-30,
-            mutate_rate=0.6,
+            mutate_rate=0.3,
             mutate_power=0.8,
             replace_rate=0.1,
         )
         self.activation_function = activation_function
         self.value = 0
         self.connections = {}
+        self.activated = False
 
     def __repr__(self):
         return f"""Neuron(Key: {self.key}, Bias: {self.bias})"""

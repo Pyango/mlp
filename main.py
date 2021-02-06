@@ -1,10 +1,14 @@
-from entities.population import Population, xor2, xand, nand
+from entities.population import Population, xor2, xand, nand, xor3
 
 population = Population(
     num_inputs=2,
     num_outputs=1,
-    fitness_threshold=3.5,
+    fitness_threshold=3.99,
     initial_fitness=4.0,
+    survival_threshold=3,
+    compatibility_threshold=1,
+    max_species=10,
+    size=150,
 )
 
 

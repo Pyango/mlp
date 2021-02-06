@@ -36,10 +36,11 @@ nand = [
 
 
 class Population:
-    compatibility_threshold = 5
-    survival_threshold = 0
+    last_species_count = 0
+    compatibility_threshold_mutate_power = 0.1
 
-    def __init__(self, num_inputs, num_outputs, initial_fitness, fitness_threshold, size=100):
+    def __init__(self, num_inputs, num_outputs, initial_fitness, fitness_threshold, size=100,
+                 compatibility_threshold=3, survival_threshold=0, max_species=30):
         self.size = size
         self.initial_fitness = initial_fitness
         self.fitness_threshold = fitness_threshold
@@ -47,6 +48,9 @@ class Population:
         self.num_outputs = num_outputs
         self.genomes = {}
         self.species = {}
+        self.compatibility_threshold = compatibility_threshold
+        self.survival_threshold = survival_threshold
+        self.max_species = max_species
         for i in range(self.size):
             self.create_genome()
 
@@ -75,15 +79,13 @@ class Population:
             # Execute the custom implemented fitness function from the developer
             compute_fitness(self.genomes.items())
 
+            # Define the best genome
             best = None
             for g in self.genomes.values():
                 if best is None or g.fitness > best.fitness:
                     best = g
-            # best.show()
-            # if best.ancestors:
-            #     for a in best.ancestors:
-            #         a.show()
 
+            # Some printing
             print(f'Generation: {generation}')
             print(f'And the best genome is: {best.key} with a fitness of {best.fitness}'
                   f' and a complexity of {best.complexity} and adj fitness {best.adjusted_fitness}')
@@ -96,6 +98,7 @@ class Population:
                 best.show()
                 break
 
+            # Calculate the distances for speciation
             distances = DistanceCache()
             self.species = {}
             genome_to_species = {}
@@ -116,6 +119,10 @@ class Population:
                         specie.genomes[og.key] = og
                         genome_to_species[og.key] = specie.key
 
+            if len(self.species) > self.max_species:
+                self.compatibility_threshold += (len(self.species) - self.max_species) * self.compatibility_threshold_mutate_power
+            self.last_species_count = len(self.species)
+
             # Compute adjusted fitness for each genome in each specie
             for specie in self.species.values():
                 for genome in specie.genomes.values():
@@ -123,6 +130,7 @@ class Population:
 
             species_avg_fitness = [s.avg_fitness for s in self.species.values()]
             print(f'Species {len(self.species)}, Genomes {len(self.genomes)}, Species avg fitness = {species_avg_fitness}')
+            print(f'Compatibility threshold {self.compatibility_threshold}')
 
             # Delete the worst 10% genomes
             genomes = sorted([g for g in self.genomes.values() if g.generation >= self.survival_threshold],
@@ -133,7 +141,7 @@ class Population:
 
             # Mutate the best 10% - 20% of all genomes
             genomes = sorted([g for g in self.genomes.values() if g.generation >= self.survival_threshold], reverse=True)
-            top_genomes = genomes[int(len(genomes) * .2): int(len(genomes) * .6)]
+            top_genomes = genomes[int(len(genomes) * .1): int(len(genomes) * .6)]
 
             for g in top_genomes:
                 g.mutate()
