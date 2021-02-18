@@ -91,11 +91,11 @@ class Population:
                   f' and a complexity of {best.complexity} and adj fitness {best.adjusted_fitness}')
             if best.ancestors:
                 print(f'The ancestors of the best genome are', best.ancestors[0].key, best.ancestors[1].key)
-            for i in xor2:
-                print(f'{i} -> {best.activate(i[:2])}')
 
             if best.fitness >= self.fitness_threshold:
-                best.show()
+                for i in xor2:
+                    print(f'{i} -> {best.activate(i[:2])}')
+                    best.show(i)
                 break
 
             # Calculate the distances for speciation

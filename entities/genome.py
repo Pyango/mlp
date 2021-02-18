@@ -64,7 +64,7 @@ class Genome:
                 output_neurone.connections[connection.key] = connection
                 self.connections[connection.key] = connection
 
-    def show(self):
+    def show(self, prefix):
         dot = Digraph(format='png', edge_attr={'arrowhead': 'vee', 'arrowsize': '1'})
         for n in self.input_neurones.values():
             dot.node(str(n.key), f'In K={n.key}\nV={trunc(n.value * 100) / 100}')
@@ -74,11 +74,29 @@ class Genome:
             dot.node(str(n.key), f'K={n.key}\nV={trunc(n.value * 100) / 100}\nB={trunc(n.bias*100)/100}')
         for key, c in self.connections.items():
             dot.edge(str(c.input_key), str(c.output_key), label=f'W={trunc(c.weight*100)/100}')
-        dot.render(f'./network-{self.key}', view=False)
+        dot.render(f'./{prefix}-network-{self.key}', view=False)
 
     @property
     def neurones(self):
         return {**self.hidden_neurones, **self.input_neurones, **self.output_neurones}
+
+    def activate_neurone(self, neurone):
+        """
+        This function is called recursively to activate all the neurones from output to input and back
+        :return:
+        """
+        try:
+            results = [neurone.bias]
+            for c in self.connections.values():
+                if c.output_key == neurone.key:
+                    input_neurone = self.neurones[c.input_key]
+                    if not input_neurone.activated:
+                        self.activate_neurone(input_neurone)
+                    results.append(input_neurone.value * c.weight)
+            neurone.value = neurone.activation_function(sum(results))
+            neurone.activated = True
+        except RecursionError:
+            self.show('error')
 
     def activate(self, inputs):
         """
@@ -92,49 +110,16 @@ class Genome:
         for n in self.neurones.values():
             n.activated = False
 
-        # Init a list of all the neurones that we will activate
-        neurones_to_activate = set()
-
         # Set all the values of the input neurones and fill the output neurones in the list
         for input_value, input_neurone in zip(inputs, self.input_neurones.values()):
             input_neurone.value = input_value
-            for c in self.connections.values():
-                if c.input_key == input_neurone.key:
-                    neurones_to_activate.add(c.output_key)
+            input_neurone.activated = True
 
         outputs = []
-        while neurones_to_activate:
-            current_neurone_key = neurones_to_activate.pop()
-            current_neurone = self.neurones[current_neurone_key]
-            if not current_neurone.activated:
-                results = [current_neurone.bias]
-                for c in self.connections.values():
-                    if c.output_key == current_neurone.key:
-                        results.append(self.neurones[c.input_key].value * c.weight)
-                    if c.input_key == current_neurone.key:
-                        neurones_to_activate.add(c.output_key)
-                current_neurone.value = current_neurone.activation_function(sum(results))
-                # Fill the output list when we handle an output neurone
-                if current_neurone.key in self.output_neurones.keys():
-                    outputs.append(current_neurone.value)
-                current_neurone.activated = True
+        for output_neurone in self.output_neurones.values():
+            self.activate_neurone(output_neurone)
+            outputs.append(output_neurone.value)
 
-        # for key in sorted(self.hidden_neurones.keys()):
-        #     current_neurone = self.hidden_neurones[key]
-        #     results = [current_neurone.bias]
-        #     for c in self.connections.values():
-        #         if c.output_key == current_neurone.key:
-        #             results.append(self.neurones[c.input_key].value * c.weight)
-        #     current_neurone.value = current_neurone.activation_function(sum(results))
-        #
-        # outputs = []
-        # for output_neurone in self.output_neurones.values():
-        #     results = [output_neurone.bias]
-        #     for c in self.connections.values():
-        #         if c.output_key == output_neurone.key:
-        #             results.append(self.neurones[c.input_key].value * c.weight)
-        #     output_neurone.value = output_neurone.activation_function(sum(results))
-        #     outputs.append(output_neurone.value)
         return outputs
 
     def get_new_neurone_key(self):
@@ -207,7 +192,8 @@ class Genome:
         if input_neurone.key == output_neurone.key:
             return
         # Don't duplicate connections
-        if (input_neurone.key, output_neurone.key) in self.connections.keys():
+        if (input_neurone.key, output_neurone.key) in self.connections.keys() or \
+                (output_neurone.key, input_neurone.key) in self.connections.keys():
             return
         self.create_connection(input_neurone.key, output_neurone.key)
 
