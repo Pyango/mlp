@@ -61,7 +61,6 @@ class Genome:
                     input_key=input_neurone.key,
                     output_key=output_neurone.key,
                 )
-                output_neurone.connections[connection.key] = connection
                 self.connections[connection.key] = connection
 
     def show(self, prefix):
@@ -205,7 +204,8 @@ class Genome:
 
         while queue:
             neuron = queue.pop(0)
-            neighbours = [self.neurones[neighbour_key] for neighbour_key in neuron.neighbours_keys()]
+            neighbour_keys = [c.output_key for c in self.connections.values() if c.input_key == neuron.key]
+            neighbours = [self.neurones[k] for k in neighbour_keys]
 
             for neighbour in neighbours:
                 if neuron == input_neuron:

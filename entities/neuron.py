@@ -17,22 +17,10 @@ class Neuron:
         )
         self.activation_function = activation_function
         self.value = 0
-        self.connections = {}
         self.activated = False
 
     def __repr__(self):
         return f"""Neuron(Key: {self.key}, Bias: {self.bias})"""
-
-    def __del__(self):
-        for connection in self.connections:
-            del connection
-
-    def activate(self):
-        results = [self.bias]
-        for c in self.connections.values():
-            results.append(c.input_neurone.value * c.weight)
-        self.value = self.activation_function(sum(results))
-        return self.value
 
     def distance(self, other_neuron):
         """
@@ -63,13 +51,3 @@ class Neuron:
             bias=neurone1.bias.value if random() > 0.5 else self.bias.value,
             activation_function=self.activation_function,
         )
-
-    def neighbours_keys(self):
-        connections = self.connections.values()
-        neighbour_keys = []
-        for connection in connections:
-            if connection.output_key != self.key:
-                neighbour_keys.append(connection.output_key)
-        return neighbour_keys
-
-
