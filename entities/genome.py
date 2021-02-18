@@ -1,5 +1,5 @@
-from random import random, choice
 from math import trunc
+from random import random, choice
 
 from graphviz import Digraph
 
@@ -68,11 +68,11 @@ class Genome:
         for n in self.input_neurones.values():
             dot.node(str(n.key), f'In K={n.key}\nV={trunc(n.value * 100) / 100}')
         for n in self.output_neurones.values():
-            dot.node(str(n.key), f'Out K={n.key}\nV={trunc(n.value * 100) / 100}\nB={trunc(n.bias*100)/100}')
+            dot.node(str(n.key), f'Out K={n.key}\nV={trunc(n.value * 100) / 100}\nB={trunc(n.bias * 100) / 100}')
         for n in self.hidden_neurones.values():
-            dot.node(str(n.key), f'K={n.key}\nV={trunc(n.value * 100) / 100}\nB={trunc(n.bias*100)/100}')
+            dot.node(str(n.key), f'K={n.key}\nV={trunc(n.value * 100) / 100}\nB={trunc(n.bias * 100) / 100}')
         for key, c in self.connections.items():
-            dot.edge(str(c.input_key), str(c.output_key), label=f'W={trunc(c.weight*100)/100}')
+            dot.edge(str(c.input_key), str(c.output_key), label=f'W={trunc(c.weight * 100) / 100}')
         dot.render(f'./{prefix}-network-{self.key}', view=False)
 
     @property

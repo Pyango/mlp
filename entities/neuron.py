@@ -1,6 +1,6 @@
 from random import random
 
-from entities.activation import sigmoid, relu
+from entities.activation import relu
 from entities.attribute import Attribute
 
 

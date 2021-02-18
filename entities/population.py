@@ -1,4 +1,5 @@
 import random
+
 from entities.genome import Genome
 from entities.specie import Specie, DistanceCache
 
@@ -120,7 +121,8 @@ class Population:
                         genome_to_species[og.key] = specie.key
 
             if len(self.species) > self.max_species:
-                self.compatibility_threshold += (len(self.species) - self.max_species) * self.compatibility_threshold_mutate_power
+                self.compatibility_threshold += (len(
+                    self.species) - self.max_species) * self.compatibility_threshold_mutate_power
             self.last_species_count = len(self.species)
 
             # Compute adjusted fitness for each genome in each specie
@@ -129,7 +131,8 @@ class Population:
                     genome.adjusted_fitness = genome.fitness / len(specie.genomes)
 
             species_avg_fitness = [s.avg_fitness for s in self.species.values()]
-            print(f'Species {len(self.species)}, Genomes {len(self.genomes)}, Species avg fitness = {species_avg_fitness}')
+            print(
+                f'Species {len(self.species)}, Genomes {len(self.genomes)}, Species avg fitness = {species_avg_fitness}')
             print(f'Compatibility threshold {self.compatibility_threshold}')
 
             # Delete the worst 10% genomes
@@ -140,7 +143,8 @@ class Population:
                 del self.genomes[g.key]
 
             # Mutate the best 10% - 20% of all genomes
-            genomes = sorted([g for g in self.genomes.values() if g.generation >= self.survival_threshold], reverse=True)
+            genomes = sorted([g for g in self.genomes.values() if g.generation >= self.survival_threshold],
+                             reverse=True)
             top_genomes = genomes[int(len(genomes) * .1): int(len(genomes) * .6)]
 
             for g in top_genomes:
