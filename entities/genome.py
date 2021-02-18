@@ -195,7 +195,25 @@ class Genome:
         if (input_neurone.key, output_neurone.key) in self.connections.keys() or \
                 (output_neurone.key, input_neurone.key) in self.connections.keys():
             return
+        if self.connection_makes_loop(input_neurone, output_neurone):
+            return
         self.create_connection(input_neurone.key, output_neurone.key)
+
+    def connection_makes_loop(self, input_neuron, output_neuron):
+        is_loop = False
+        queue = [output_neuron]
+
+        while queue:
+            neuron = queue.pop(0)
+            neighbours = [self.neurones[neighbour_key] for neighbour_key in neuron.neighbours_keys()]
+
+            for neighbour in neighbours:
+                if neuron == input_neuron:
+                    is_loop = True
+                    break
+                queue.append(neighbour)
+
+        return is_loop
 
     def mutate_delete_connection(self):
         if self.connections:

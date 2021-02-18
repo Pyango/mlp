@@ -63,3 +63,13 @@ class Neuron:
             bias=neurone1.bias.value if random() > 0.5 else self.bias.value,
             activation_function=self.activation_function,
         )
+
+    def neighbours_keys(self):
+        connections = self.connections.values()
+        neighbour_keys = []
+        for connection in connections:
+            if connection.output_key != self.key:
+                neighbour_keys.append(connection.output_key)
+        return neighbour_keys
+
+
