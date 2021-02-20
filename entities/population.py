@@ -1,5 +1,8 @@
 import random
 
+import gym
+import numpy as np
+
 from entities.genome import Genome
 from entities.specie import Specie, DistanceCache
 
@@ -38,7 +41,7 @@ nand = [
 
 class Population:
     last_species_count = 0
-    compatibility_threshold_mutate_power = 0.1
+    compatibility_threshold_mutate_power = 0.01
 
     def __init__(self, num_inputs, num_outputs, initial_fitness, fitness_threshold, size=100,
                  compatibility_threshold=3, survival_threshold=0, max_species=30):
@@ -75,7 +78,7 @@ class Population:
             return max(self.species.keys()) + 1
         return 1
 
-    def run(self, compute_fitness, generations=3000):
+    def run(self, compute_fitness, on_success, generations=3000):
         for generation in range(generations):
             # Execute the custom implemented fitness function from the developer
             compute_fitness(self.genomes.items())
@@ -94,9 +97,9 @@ class Population:
                 print(f'The ancestors of the best genome are', best.ancestors[0].key, best.ancestors[1].key)
 
             if best.fitness >= self.fitness_threshold:
-                for i in xor2:
-                    print(f'{i} -> {best.activate(i[:2])}')
-                    best.show(i)
+                if on_success:
+                    on_success(best)
+                best.show()
                 break
 
             # Calculate the distances for speciation
@@ -130,34 +133,48 @@ class Population:
                 for genome in specie.genomes.values():
                     genome.adjusted_fitness = genome.fitness / len(specie.genomes)
 
-            species_avg_fitness = [s.avg_fitness for s in self.species.values()]
-            print(
-                f'Species {len(self.species)}, Genomes {len(self.genomes)}, Species avg fitness = {species_avg_fitness}')
+            """
+            Print section
+            """
+
+            print(f'Species {len(self.species)}')
+            print(f'Genomes {len(self.genomes)}')
             print(f'Compatibility threshold {self.compatibility_threshold}')
 
-            # Delete the worst 10% genomes
-            genomes = sorted([g for g in self.genomes.values() if g.generation >= self.survival_threshold],
-                             reverse=False)
-            bad_genomes = genomes[int(len(genomes) * .0): int(len(genomes) * .10)]
-            for g in bad_genomes:
-                del self.genomes[g.key]
+            """
+            Crossover and mutation
+            """
+            top_genomes = sorted(
+                [g for g in self.genomes.values()],
+                reverse=True,
+            )
+            bad_genomes = sorted(
+                [g for g in self.genomes.values()],
+                reverse=False,
+            )
 
-            # Mutate the best 10% - 20% of all genomes
-            genomes = sorted([g for g in self.genomes.values() if g.generation >= self.survival_threshold],
-                             reverse=True)
-            top_genomes = genomes[int(len(genomes) * .1): int(len(genomes) * .6)]
-
-            for g in top_genomes:
+            # Mutate the best 20% - 40% of all genomes
+            for g in top_genomes[int(len(top_genomes) * .2): int(len(top_genomes) * .4)]:
                 g.mutate()
 
-            # Crossover the best 0% - 10% of all genomes
-            top_genomes = genomes[int(len(genomes) * .0): int(len(genomes) * .1)]
+            # Crossover the best 0% - 10% of all genomes and delete the same amount of the worst ones
+            crossover_genomes = top_genomes[int(len(top_genomes) * .0): int(len(top_genomes) * .1)]
+            genomes_to_delete = bad_genomes[int(len(bad_genomes) * .1): int(len(bad_genomes) * .2)]
 
-            for i in range(len(bad_genomes)):
-                parent1 = random.choice(top_genomes)
-                parent2 = random.choice(top_genomes)
+            for bad_genome in genomes_to_delete:
+                parent1 = random.choice(crossover_genomes)
+                parent2 = random.choice(crossover_genomes)
                 new_genome = self.create_genome()
                 new_genome.crossover(parent1, parent2)
                 new_genome.mutate()
+                del self.genomes[bad_genome.key]
 
-            print()
+            # Delete the worst 10% genomes and let them rebirth: stagnation mechanism
+            for g in bad_genomes[int(len(bad_genomes) * .0): int(len(bad_genomes) * .1)]:
+                if g.key in self.genomes:
+                    if self.genomes[g.key].generation > self.survival_threshold:
+                        del self.genomes[g.key]
+                        print('Deletion and rebirth')
+                        self.create_genome()
+                    else:
+                        g.mutate()

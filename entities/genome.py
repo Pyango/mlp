@@ -63,7 +63,9 @@ class Genome:
                 )
                 self.connections[connection.key] = connection
 
-    def show(self, prefix):
+    def show(self, prefix=None):
+        if not prefix:
+            prefix = self.key
         dot = Digraph(format='png', edge_attr={'arrowhead': 'vee', 'arrowsize': '1'})
         for n in self.input_neurones.values():
             dot.node(str(n.key), f'In K={n.key}\nV={trunc(n.value * 100) / 100}')
@@ -96,6 +98,7 @@ class Genome:
             neurone.activated = True
         except RecursionError:
             self.show('error')
+            breakpoint()
 
     def activate(self, inputs):
         """
@@ -204,6 +207,10 @@ class Genome:
 
         while queue:
             neuron = queue.pop(0)
+            # Prevent loops with neurones that dont have any outgoing connections
+            if neuron.key == input_neuron.key:
+                is_loop = True
+                break
             neighbour_keys = [c.output_key for c in self.connections.values() if c.input_key == neuron.key]
             neighbours = [self.neurones[k] for k in neighbour_keys]
 
