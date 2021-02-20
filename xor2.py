@@ -5,7 +5,7 @@ population = Population(
     num_outputs=1,
     fitness_threshold=3.99,
     initial_fitness=4.0,
-    survival_threshold=3,
+    survival_threshold=0,
     compatibility_threshold=1,
     max_species=10,
     size=150,
@@ -25,4 +25,4 @@ def on_success(best):
         print(f'{i} -> {best.activate(i[:2])}')
 
 
-population.run(compute_fitness)
+population.run(compute_fitness, on_success)

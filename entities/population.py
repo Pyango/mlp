@@ -174,7 +174,6 @@ class Population:
                 if g.key in self.genomes:
                     if self.genomes[g.key].generation > self.survival_threshold:
                         del self.genomes[g.key]
-                        print('Deletion and rebirth')
                         self.create_genome()
                     else:
                         g.mutate()

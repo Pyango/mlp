@@ -11,9 +11,9 @@ class Genome:
     # Static config variables go here
     compatibility_disjoint_coefficient = 1
     adjusted_fitness = None
-    neuron_add_prob = .02
-    neuron_delete_prob = .01
-    conn_add_prob = .1
+    neuron_add_prob = .05
+    neuron_delete_prob = .001
+    conn_add_prob = .2
     conn_delete_prob = .1
     generation = 0
     ancestors = None
