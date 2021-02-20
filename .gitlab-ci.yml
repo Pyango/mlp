@@ -1,0 +1,67 @@
+stages:
+  - pull
+  - build
+  - tagging
+  - push
+
+before_script:
+  - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+
+pull:
+  stage: pull
+  tags:
+    - build
+  allow_failure: true
+  except:
+    - schedules
+  script:
+    - docker pull "$CI_REGISTRY_IMAGE":latest
+
+build:
+  stage: build
+  tags:
+    - build
+  except:
+    - schedules
+  script:
+    - docker build --tag="$CI_PIPELINE_ID":"$CI_COMMIT_REF_NAME" --cache-from="$CI_REGISTRY_IMAGE":latest --pull .
+
+tagging:
+  stage: tagging
+  only:
+    - master
+  except:
+    - schedules
+  tags:
+    - build
+  script:
+    - export CI_COMMIT_MESSAGE=$CI_COMMIT_MESSAGE
+    - export CI_JOB_TOKEN=$CI_JOB_TOKEN
+    - export CI_COMMIT_REF_NAME=$CI_COMMIT_REF_NAME
+    - bash ./scripts/auto_tag.sh
+
+push image:
+  stage: push
+  tags:
+    - build
+  only:
+    - master
+    - /^feature-.*$/i
+    - /^release-.*$/i
+    - tags
+  except:
+    - schedules
+  script:
+    - sleep 5s  # wait 5 seconds to prevent internal server error from pushing in parallel
+    - docker tag "$CI_PIPELINE_ID":"$CI_COMMIT_REF_NAME" "$CI_REGISTRY_IMAGE":"$CI_COMMIT_REF_NAME"
+    - docker push "$CI_REGISTRY_IMAGE":"$CI_COMMIT_REF_NAME"
+
+push latest:
+  stage: push
+  tags:
+    - build
+  except:
+    - schedules
+  script:
+    - docker tag "$CI_PIPELINE_ID":"$CI_COMMIT_REF_NAME" "$CI_REGISTRY_IMAGE":latest
+    - docker push "$CI_REGISTRY_IMAGE":latest

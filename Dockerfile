@@ -6,6 +6,8 @@ RUN apk add --no-cache \
     git \
     openssh \
     gcc \
+    graphviz \
+    ttf-dejavu \
     musl-dev
 
 
@@ -22,10 +24,6 @@ ENV NOTVISIBLE "in users profile"
 RUN mkdir -p /app
 
 COPY ./requirements.yml /app/requirements.yml
-RUN /opt/conda/bin/conda env update --file /app/requirements.yml --prune \
-  && /opt/conda/bin/conda clean -ay \
-  && find /opt/conda/ -follow -type f -name '*.a' -delete \
-  && find /opt/conda/ -follow -type f -name '*.pyc' -delete \
-  && find /opt/conda/ -follow -type f -name '*.js.map' -delete
+RUN /opt/conda/bin/conda env update --file /app/requirements.yml --prune
 
 ENV PATH="/opt/conda/bin:${PATH}"
