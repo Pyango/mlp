@@ -1,50 +1,15 @@
 import random
 
-import gym
-import numpy as np
-
 from entities.genome import Genome
 from entities.specie import Specie, DistanceCache
-
-xor2 = [
-    [0.0, 0.0, 0.0],
-    [0.0, 1.0, 1.0],
-    [1.0, 0.0, 1.0],
-    [1.0, 1.0, 0.0],
-]
-
-xor3 = [
-    [0, 0, 0, 0],
-    [0, 0, 1, 1],
-    [0, 1, 0, 1],
-    [0, 1, 1, 0],
-    [1, 0, 0, 1],
-    [1, 0, 1, 0],
-    [1, 1, 0, 0],
-    [1, 1, 1, 1],
-]
-
-xand = [
-    [0, 0, 1],
-    [0, 1, 0],
-    [1, 0, 0],
-    [1, 1, 1],
-]
-
-nand = [
-    [0, 0, 0],
-    [0, 1, 0],
-    [1, 0, 0],
-    [1, 1, 1],
-]
 
 
 class Population:
     last_species_count = 0
-    compatibility_threshold_mutate_power = 0.01
 
-    def __init__(self, num_inputs, num_outputs, initial_fitness, fitness_threshold, size=100,
-                 compatibility_threshold=3, survival_threshold=0, max_species=30):
+    def __init__(self, num_inputs, num_outputs, initial_fitness, fitness_threshold, output_activation_function,
+                 size=100, compatibility_threshold=3, survival_threshold=0, max_species=30,
+                 compatibility_threshold_mutate_power=.01):
         self.size = size
         self.initial_fitness = initial_fitness
         self.fitness_threshold = fitness_threshold
@@ -53,8 +18,10 @@ class Population:
         self.genomes = {}
         self.species = {}
         self.compatibility_threshold = compatibility_threshold
+        self.compatibility_threshold_mutate_power = compatibility_threshold_mutate_power
         self.survival_threshold = survival_threshold
         self.max_species = max_species
+        self.output_activation_function = output_activation_function
         for i in range(self.size):
             self.create_genome()
 
@@ -63,7 +30,8 @@ class Population:
             key=self.get_new_genome_key(),
             num_inputs=self.num_inputs,
             num_outputs=self.num_outputs,
-            initial_fitness=self.initial_fitness
+            initial_fitness=self.initial_fitness,
+            output_activation_function=self.output_activation_function,
         )
         self.genomes[genome.key] = genome
         return genome
@@ -78,7 +46,7 @@ class Population:
             return max(self.species.keys()) + 1
         return 1
 
-    def run(self, compute_fitness, on_success, generations=3000):
+    def run(self, compute_fitness, on_success, generations=100):
         for generation in range(generations):
             # Execute the custom implemented fitness function from the developer
             compute_fitness(self.genomes.items())
@@ -97,9 +65,6 @@ class Population:
                 print(f'The ancestors of the best genome are', best.ancestors[0].key, best.ancestors[1].key)
 
             if best.fitness >= self.fitness_threshold:
-                if on_success:
-                    on_success(best)
-                best.show()
                 break
 
             # Calculate the distances for speciation
@@ -118,10 +83,11 @@ class Population:
                 else:
                     specie = self.species[genome_to_species[g.key]]
                 for og in self.genomes.values():
-                    distance = distances(g, og)
-                    if distance <= self.compatibility_threshold:
-                        specie.genomes[og.key] = og
-                        genome_to_species[og.key] = specie.key
+                    if og.key not in genome_to_species:
+                        distance = distances(g, og)
+                        if distance <= self.compatibility_threshold:
+                            specie.genomes[og.key] = og
+                            genome_to_species[og.key] = specie.key
 
             if len(self.species) > self.max_species:
                 self.compatibility_threshold += (len(
@@ -132,6 +98,8 @@ class Population:
             for specie in self.species.values():
                 for genome in specie.genomes.values():
                     genome.adjusted_fitness = genome.fitness / len(specie.genomes)
+                    if genome == best:
+                        print(f'Best {genome.key} is in specie {specie.key} with {len(specie.genomes)} members.')
 
             """
             Print section
@@ -177,3 +145,6 @@ class Population:
                         self.create_genome()
                     else:
                         g.mutate()
+        if on_success:
+            on_success(best)
+        best.show()

@@ -3,6 +3,7 @@ from random import random, choice
 
 from graphviz import Digraph
 
+from entities.activation import all_activation_functions
 from entities.connection import Connection
 from entities.neuron import Neuron
 
@@ -33,13 +34,15 @@ class Genome:
     def __le__(self, other):
         return self.adjusted_fitness <= other
 
-    def __init__(self, key, num_inputs, num_outputs, initial_fitness):
+    def __init__(self, key, num_inputs, num_outputs, initial_fitness, output_activation_function):
         self.key = key
         self.connections = {}
         self.input_neurones = {}
         self.output_neurones = {}
         self.hidden_neurones = {}
         self.fitness = initial_fitness
+        self.output_activation_function = output_activation_function
+
         # Input neurons have negative keys
         for i in range(num_inputs):
             n = Neuron(
@@ -51,6 +54,7 @@ class Genome:
         for i in range(num_outputs):
             n = Neuron(
                 key=i + 1,
+                output=True
             )
             self.output_neurones[n.key] = n
 
@@ -86,19 +90,20 @@ class Genome:
         This function is called recursively to activate all the neurones from output to input and back
         :return:
         """
-        try:
-            results = [neurone.bias]
-            for c in self.connections.values():
-                if c.output_key == neurone.key:
-                    input_neurone = self.neurones[c.input_key]
-                    if not input_neurone.activated:
-                        self.activate_neurone(input_neurone)
-                    results.append(input_neurone.value * c.weight)
+        results = [neurone.bias]
+        # Check if there are connections with unactivated neurones and call the function again
+        for c in self.connections.values():
+            if c.output_key == neurone.key:
+                input_neurone = self.neurones[c.input_key]
+                if not input_neurone.activated:
+                    self.activate_neurone(input_neurone)
+                results.append(input_neurone.value * c.weight)
+        # Activate the neurone
+        if not neurone.output:
             neurone.value = neurone.activation_function(sum(results))
-            neurone.activated = True
-        except RecursionError:
-            self.show('error')
-            breakpoint()
+        else:
+            neurone.value = self.output_activation_function(sum(results))
+        neurone.activated = True
 
     def activate(self, inputs):
         """
@@ -135,6 +140,8 @@ class Genome:
     def create_neuron(self):
         neurone = Neuron(
             key=self.get_new_neurone_key(),
+            bias=random(),
+            activation_function=choice(all_activation_functions),
         )
         self.hidden_neurones[neurone.key] = neurone
         return neurone
@@ -199,7 +206,11 @@ class Genome:
             return
         if self.connection_makes_loop(input_neurone, output_neurone):
             return
-        self.create_connection(input_neurone.key, output_neurone.key)
+        self.create_connection(
+            input_neurone.key,
+            output_neurone.key,
+            weight=random(),
+        )
 
     def connection_makes_loop(self, input_neuron, output_neuron):
         is_loop = False

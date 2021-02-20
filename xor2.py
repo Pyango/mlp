@@ -1,4 +1,37 @@
-from entities.population import Population, xor2
+from entities.activation import sigmoid_activation
+from entities.population import Population
+
+xor2 = [
+    [0.0, 0.0, 0.0],
+    [0.0, 1.0, 1.0],
+    [1.0, 0.0, 1.0],
+    [1.0, 1.0, 0.0],
+]
+
+xor3 = [
+    [0, 0, 0, 0],
+    [0, 0, 1, 1],
+    [0, 1, 0, 1],
+    [0, 1, 1, 0],
+    [1, 0, 0, 1],
+    [1, 0, 1, 0],
+    [1, 1, 0, 0],
+    [1, 1, 1, 1],
+]
+
+xand = [
+    [0, 0, 1],
+    [0, 1, 0],
+    [1, 0, 0],
+    [1, 1, 1],
+]
+
+nand = [
+    [0, 0, 0],
+    [0, 1, 0],
+    [1, 0, 0],
+    [1, 1, 1],
+]
 
 population = Population(
     num_inputs=2,
@@ -7,8 +40,10 @@ population = Population(
     initial_fitness=4.0,
     survival_threshold=0,
     compatibility_threshold=1,
-    max_species=10,
-    size=150,
+    max_species=20,
+    size=300,
+    output_activation_function=sigmoid_activation,
+    compatibility_threshold_mutate_power=.1,
 )
 
 
@@ -25,4 +60,4 @@ def on_success(best):
         print(f'{i} -> {best.activate(i[:2])}')
 
 
-population.run(compute_fitness, on_success)
+population.run(compute_fitness, on_success, generations=3000)

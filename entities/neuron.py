@@ -1,12 +1,15 @@
-from random import random
+from random import random, choice
 
-from entities.activation import relu, sigmoid
+from entities.activation import relu_activation, all_activation_functions
 from entities.attribute import Attribute
 
 
 class Neuron:
-    def __init__(self, key, bias=1, activation_function=relu):
+    activation_function_mutate_rate = 0.1
+
+    def __init__(self, key, bias=1, output=False, activation_function=relu_activation):
         self.key = key
+        self.value = 0
         self.bias = Attribute(
             value=bias,
             max_value=30,
@@ -15,9 +18,9 @@ class Neuron:
             mutate_power=0.8,
             replace_rate=0.1,
         )
-        self.activation_function = activation_function
-        self.value = 0
         self.activated = False
+        self.output = output
+        self.activation_function = activation_function
 
     def __repr__(self):
         return f"""Neuron(Key: {self.key}, Bias: {self.bias})"""
@@ -31,6 +34,10 @@ class Neuron:
 
     def mutate(self):
         self.bias.mutate_value()
+
+        r = random()
+        if r < self.activation_function_mutate_rate:
+            self.activation_function = choice(all_activation_functions)
 
     def copy(self):
         return self.__class__(
