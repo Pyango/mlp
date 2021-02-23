@@ -1,19 +1,20 @@
 import gym
 import numpy as np
+import pickle
 
-from entities.activation import clamped_activation
+from entities.activation import all_activation_functions
 from entities.population import Population
 
 population = Population(
     num_inputs=24,
     num_outputs=4,
-    fitness_threshold=200,  # frames how long it should survive
+    fitness_threshold=200,
     initial_fitness=0,
     survival_threshold=0,
     compatibility_threshold=1,
-    max_species=2,
-    size=20,
-    output_activation_function=clamped_activation,
+    max_species=10,
+    size=100,
+    output_activation_functions=all_activation_functions,
 )
 
 runs_per_net = 1
@@ -43,6 +44,9 @@ def on_success(best):
         action = best.activate(observation)
         observation, reward, done, info = env.step(action)
         env.render()
+    outfile = open('best-bipeda-walker', 'wb')
+    pickle.dump(best, outfile)
+    outfile.close()
 
 
 population.run(compute_fitness, on_success, generations=300)

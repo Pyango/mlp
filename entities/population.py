@@ -7,7 +7,7 @@ from entities.specie import Specie, DistanceCache
 class Population:
     last_species_count = 0
 
-    def __init__(self, num_inputs, num_outputs, initial_fitness, fitness_threshold, output_activation_function,
+    def __init__(self, num_inputs, num_outputs, initial_fitness, fitness_threshold, output_activation_functions,
                  size=100, compatibility_threshold=3, survival_threshold=0, max_species=30,
                  compatibility_threshold_mutate_power=.01):
         self.size = size
@@ -21,7 +21,7 @@ class Population:
         self.compatibility_threshold_mutate_power = compatibility_threshold_mutate_power
         self.survival_threshold = survival_threshold
         self.max_species = max_species
-        self.output_activation_function = output_activation_function
+        self.output_activation_functions = output_activation_functions
         for i in range(self.size):
             self.create_genome()
 
@@ -31,7 +31,7 @@ class Population:
             num_inputs=self.num_inputs,
             num_outputs=self.num_outputs,
             initial_fitness=self.initial_fitness,
-            output_activation_function=self.output_activation_function,
+            output_activation_functions=self.output_activation_functions,
         )
         self.genomes[genome.key] = genome
         return genome
@@ -56,13 +56,6 @@ class Population:
             for g in self.genomes.values():
                 if best is None or g.fitness > best.fitness:
                     best = g
-
-            # Some printing
-            print(f'Generation: {generation}')
-            print(f'And the best genome is: {best.key} with a fitness of {best.fitness}'
-                  f' and a complexity of {best.complexity} and adj fitness {best.adjusted_fitness}')
-            if best.ancestors:
-                print(f'The ancestors of the best genome are', best.ancestors[0].key, best.ancestors[1].key)
 
             if best.fitness >= self.fitness_threshold:
                 break
@@ -105,9 +98,19 @@ class Population:
             Print section
             """
 
-            print(f'Species {len(self.species)}')
-            print(f'Genomes {len(self.genomes)}')
+            print('')
+            print('#######################')
+            print('')
+            print(f'Current Generation: {generation}')
+            print(f'Number of Species {len(self.species)}')
+            print(f'Number of Genomes {len(self.genomes)}')
             print(f'Compatibility threshold {self.compatibility_threshold}')
+
+            # Some printing
+            print(f'And the best genome is: {best.key} with a fitness of {best.fitness}'
+                  f' and a complexity of {best.complexity} and adj fitness {best.adjusted_fitness}')
+            if best.ancestors:
+                print(f'The ancestors of the best genome are', best.ancestors[0].key, best.ancestors[1].key)
 
             """
             Crossover and mutation

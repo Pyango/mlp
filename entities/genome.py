@@ -16,6 +16,7 @@ class Genome:
     neuron_delete_prob = .001
     conn_add_prob = .2
     conn_delete_prob = .1
+    output_activation_function_mutate_rate = 0.1
     generation = 0
     ancestors = None
 
@@ -34,14 +35,19 @@ class Genome:
     def __le__(self, other):
         return self.adjusted_fitness <= other
 
-    def __init__(self, key, num_inputs, num_outputs, initial_fitness, output_activation_function):
+    def __init__(self, key, num_inputs, num_outputs, initial_fitness, output_activation_functions,
+                 output_activation_function=None):
         self.key = key
         self.connections = {}
         self.input_neurones = {}
         self.output_neurones = {}
         self.hidden_neurones = {}
         self.fitness = initial_fitness
-        self.output_activation_function = output_activation_function
+        self.output_activation_functions = output_activation_functions
+        if output_activation_function:
+            self.output_activation_function = output_activation_function
+        else:
+            self.output_activation_function = self.output_activation_functions[0]
 
         # Input neurons have negative keys
         for i in range(num_inputs):
@@ -265,6 +271,10 @@ class Genome:
         for neurone in self.neurones.values():
             neurone.mutate()
 
+        r = random()
+        if r < self.output_activation_function_mutate_rate:
+            self.output_activation_function = choice(self.output_activation_functions)
+
     def distance(self, other):
         """
         Returns the genetic distance between this genome and the other. This distance value
@@ -350,4 +360,5 @@ class Genome:
             else:
                 # Homologous gene: combine genes from both parents.
                 self.connections[key] = connection1.crossover(connection2)
+        self.output_activation_function = parent1.output_activation_function
         self.ancestors = [parent1, parent2]

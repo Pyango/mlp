@@ -1,3 +1,5 @@
+import pickle
+
 from entities.activation import sigmoid_activation
 from entities.population import Population
 
@@ -42,7 +44,7 @@ population = Population(
     compatibility_threshold=1,
     max_species=20,
     size=300,
-    output_activation_function=sigmoid_activation,
+    output_activation_functions=[sigmoid_activation],
     compatibility_threshold_mutate_power=.1,
 )
 
@@ -58,6 +60,18 @@ def compute_fitness(genomes):
 def on_success(best):
     for i in xor2:
         print(f'{i} -> {best.activate(i[:2])}')
+    outfile = open('best-xor2', 'wb')
+    pickle.dump(best, outfile)
+    outfile.close()
 
 
+def load_pickle():
+    infile = open('best-xor2', 'rb')
+    best = pickle.load(infile)
+    infile.close()
+    for i in xor2:
+        print(f'{i} -> {best.activate(i[:2])}')
+
+
+# load_pickle()
 population.run(compute_fitness, on_success, generations=3000)

@@ -13,7 +13,7 @@ population = Population(
     compatibility_threshold=1,
     max_species=10,
     size=150,
-    output_activation_function=relu_activation,
+    output_activation_functions=[relu_activation],
 )
 
 runs_per_net = 2
