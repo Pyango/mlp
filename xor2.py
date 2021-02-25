@@ -1,3 +1,4 @@
+import multiprocessing
 import pickle
 
 from entities.activation import sigmoid_activation
@@ -43,18 +44,18 @@ population = Population(
     survival_threshold=0,
     compatibility_threshold=1,
     max_species=20,
-    size=300,
+    size=150,
     output_activation_functions=[sigmoid_activation],
     compatibility_threshold_mutate_power=.1,
 )
 
 
-def compute_fitness(genomes):
-    for genome_key, genome in genomes:
-        genome.fitness = 4.0
-        for i in xor2:
-            result = genome.activate(i[:2])
-            genome.fitness -= (result[0] - i[-1]) ** 2
+def compute_fitness(genome):
+    genome.fitness = 4.0
+    for i in xor2:
+        result = genome.activate(i[:2])
+        genome.fitness -= (result[0] - i[-1]) ** 2
+    return genome
 
 
 def on_success(best):
@@ -73,5 +74,11 @@ def load_pickle():
         print(f'{i} -> {best.activate(i[:2])}')
 
 
-# load_pickle()
-population.run(compute_fitness, on_success, generations=3000)
+def run():
+    multiprocessing.freeze_support()
+    # load_pickle()
+    population.run(compute_fitness, on_success, generations=3000)
+
+
+if __name__ == '__main__':
+    run()

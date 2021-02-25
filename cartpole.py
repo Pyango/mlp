@@ -1,3 +1,5 @@
+import multiprocessing
+
 import gym
 import numpy as np
 
@@ -19,23 +21,23 @@ population = Population(
 runs_per_net = 2
 
 
-def compute_fitness(genomes):
-    for genome_key, genome in genomes:
-        fitnesses = []
+def compute_fitness(genome):
+    fitnesses = []
 
-        for runs in range(runs_per_net):
-            env = gym.make("CartPole-v1")
+    for runs in range(runs_per_net):
+        env = gym.make("CartPole-v1")
 
-            observation = env.reset()
-            fitness = 0.0
-            done = False
-            while not done:
-                action = np.argmax(genome.activate(observation))
-                observation, reward, done, info = env.step(action)
-                fitness += reward
+        observation = env.reset()
+        fitness = 0.0
+        done = False
+        while not done:
+            action = np.argmax(genome.activate(observation))
+            observation, reward, done, info = env.step(action)
+            fitness += reward
 
-            fitnesses.append(fitness)
-        genome.fitness = np.mean(fitnesses)
+        fitnesses.append(fitness)
+    genome.fitness = np.mean(fitnesses)
+    return genome
 
 
 def on_success(best):
@@ -48,4 +50,11 @@ def on_success(best):
         env.render()
 
 
-population.run(compute_fitness, on_success)
+def run():
+    multiprocessing.freeze_support()
+    # load_pickle()
+    population.run(compute_fitness, on_success)
+
+
+if __name__ == '__main__':
+    run()

@@ -48,7 +48,7 @@ class Population:
             return max(self.species.keys()) + 1
         return 1
 
-    def run(self, compute_fitness, on_success, generations=100):
+    def run(self, compute_fitness, on_success, on_generation=None, generations=100):
         for generation in range(generations):
 
             """
@@ -79,6 +79,9 @@ class Population:
                     best = g
                 if worst is None or g.fitness < worst.fitness:
                     worst = g
+
+            if on_generation:
+                on_generation(generation, best)
 
             if best.fitness >= self.fitness_threshold:
                 break
