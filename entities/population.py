@@ -1,4 +1,6 @@
 import random
+import time
+from multiprocessing import Pool
 
 from entities.genome import Genome
 from entities.specie import Specie, DistanceCache
@@ -48,14 +50,35 @@ class Population:
 
     def run(self, compute_fitness, on_success, generations=100):
         for generation in range(generations):
-            # Execute the custom implemented fitness function from the developer
-            compute_fitness(self.genomes.items())
 
+            """
+            Print section
+            """
+
+            print('')
+            print('#######################')
+            print('')
+            print(f'Current Generation: {generation}')
+            print(f'Number of Species {len(self.species)}')
+            print(f'Number of Genomes {len(self.genomes)}')
+            print(f'Compatibility threshold {self.compatibility_threshold}')
+
+            # Execute the custom implemented fitness function from the developer
+            start_time = time.time()
+            with Pool(4) as p:
+                results = p.map(compute_fitness, self.genomes.values())
+                self.genomes = {g.key: g for g in results}
+            print(f"--- {time.time() - start_time} seconds for compute fitness ---")
+
+            start_time = time.time()
             # Define the best genome
             best = None
+            worst = None
             for g in self.genomes.values():
                 if best is None or g.fitness > best.fitness:
                     best = g
+                if worst is None or g.fitness < worst.fitness:
+                    worst = g
 
             if best.fitness >= self.fitness_threshold:
                 break
@@ -94,23 +117,13 @@ class Population:
                     if genome == best:
                         print(f'Best {genome.key} is in specie {specie.key} with {len(specie.genomes)} members.')
 
-            """
-            Print section
-            """
-
-            print('')
-            print('#######################')
-            print('')
-            print(f'Current Generation: {generation}')
-            print(f'Number of Species {len(self.species)}')
-            print(f'Number of Genomes {len(self.genomes)}')
-            print(f'Compatibility threshold {self.compatibility_threshold}')
-
             # Some printing
             print(f'And the best genome is: {best.key} with a fitness of {best.fitness}'
                   f' and a complexity of {best.complexity} and adj fitness {best.adjusted_fitness}')
             if best.ancestors:
                 print(f'The ancestors of the best genome are', best.ancestors[0].key, best.ancestors[1].key)
+            print(f'And the worst genome is: {worst.key} with a fitness of {worst.fitness}'
+                  f' and a complexity of {worst.complexity} and adj fitness {worst.adjusted_fitness}')
 
             """
             Crossover and mutation
@@ -148,6 +161,7 @@ class Population:
                         self.create_genome()
                     else:
                         g.mutate()
+            print(f"--- {time.time() - start_time} to eval the species and mutate ---")
         if on_success:
             on_success(best)
         best.show()
