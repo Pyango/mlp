@@ -184,7 +184,7 @@ def on_generation(best, population):
             else:
                 crypto_account -= trading_fee_crypto
 
-            trades.loc[index] = {
+            trades.iloc[index] = {
                 'x': index,
                 'y': open_price,
                 'color': 'green',
@@ -219,7 +219,7 @@ def on_generation(best, population):
             else:
                 crypto_account -= trading_fee_crypto
 
-            trades.loc[index] = {
+            trades.iloc[index] = {
                 'x': index,
                 'y': open_price,
                 'color': 'red',
@@ -235,7 +235,7 @@ def on_generation(best, population):
         fiat_account += fiat_trade_amount
         # Trading fees
         trading_fee_fiat = fiat_trade_amount * trading_fee_percent
-        trades.loc[data.index[-1]] = {
+        trades.iloc[data.index[-1]] = {
             'x': data.index[-1],
             'y': close_price,
             'color': 'red',
