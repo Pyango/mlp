@@ -1,3 +1,4 @@
+import multiprocessing
 import pickle
 
 import numpy as np
@@ -36,9 +37,10 @@ def compute_fitness(genomes):
     for i in range(6):
         ticker = k.get_ticker_information("ETHEUR")
         current_price = ticker.c[0][0]
-        print(f'Ticker ETHEUR Ticker: {i+1} Current price: {current_price}')
+        print(f'Ticker ETHEUR Ticker: {i + 1} Current price: {current_price}')
         for genome_key, genome in genomes:
-            input_array = ticker.a[0] + ticker.b[0] + ticker.c[0] + ticker.h[0] + ticker.l[0] + [ticker.o[0]] + ticker.p[0] + ticker.t[0] + ticker.v[0]
+            input_array = ticker.a[0] + ticker.b[0] + ticker.c[0] + ticker.h[0] + ticker.l[0] + [ticker.o[0]] + \
+                          ticker.p[0] + ticker.t[0] + ticker.v[0]
             input_array = [float(i) for i in input_array]
             pred = np.argmax(genome.activate(input_array))  # [<buy> | 0, <sell> | 1, <hold> | 2]
 
@@ -84,4 +86,14 @@ def on_success(best):
     outfile.close()
 
 
-population.run(compute_fitness, on_success)
+def run():
+    multiprocessing.freeze_support()
+    # load_pickle()
+    population.run(
+        compute_fitness,
+        on_success,
+    )
+
+
+if __name__ == '__main__':
+    run()

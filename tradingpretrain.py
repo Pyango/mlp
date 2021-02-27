@@ -6,20 +6,20 @@ import numpy as np
 import pandas
 from pykrakenapi import KrakenAPI
 
-from entities.activation import all_activation_functions
+from entities.activation import sigmoid_activation, relu_activation
 from entities.population import Population
 
 population = Population(
     num_inputs=9,
     num_outputs=4,
     fitness_threshold=2000,  # fiat profit without fees the bot should target as good fitness
+    output_activation_functions=[sigmoid_activation, relu_activation],
     initial_fitness=0,
     survival_threshold=3,
     compatibility_threshold=1,
-    max_species=20,
-    size=300,
-    output_activation_functions=all_activation_functions,
-    compatibility_threshold_mutate_power=.8,
+    max_species=10,
+    size=150,
+    compatibility_threshold_mutate_power=.2,
 )
 
 api = krakenex.API()
@@ -124,7 +124,16 @@ def compute_fitness(genome):
     return genome
 
 
-def on_generation(generation, best):
+def on_generation(best, population):
+    most_complex = None
+    for genome in population.genomes.values():
+        if not most_complex:
+            most_complex = genome
+        else:
+            if sum(genome.complexity) > sum(most_complex.complexity):
+                most_complex = genome
+                print(f'Most complex genome is {genome.key} with {genome.complexity}')
+
     trades = pandas.DataFrame(columns=['x', 'y', 'color', 'hover'])
     fiat_account = 1000
     crypto_account = 0
@@ -232,30 +241,32 @@ def on_generation(generation, best):
             'color': 'red',
             'hover': f'Fiat: {fiat_trade_amount}<br>Crypto: {crypto_account}<br>Trading fees fiat: {trading_fee_fiat}',
         }
-
-    fig = go.Figure(
-        data=[
-            go.Candlestick(
-                x=data.index,
-                open=data['open'],
-                high=data['high'],
-                low=data['low'],
-                close=data['close'],
-                increasing_line_color='cyan',
-                decreasing_line_color='gray',
-            ),
-            go.Scatter(
-                x=trades.x,
-                y=trades.y,
-                mode='markers',
-                marker=dict(
-                    color=trades.color,
+    try:
+        fig = go.Figure(
+            data=[
+                go.Candlestick(
+                    x=data.index,
+                    open=data['open'],
+                    high=data['high'],
+                    low=data['low'],
+                    close=data['close'],
+                    increasing_line_color='cyan',
+                    decreasing_line_color='gray',
                 ),
-                hovertext=trades.hover,
-                hoverlabel=dict(namelength=0),
-                hovertemplate='%{hovertext}'
-            ),
-        ])
+                go.Scatter(
+                    x=trades.x,
+                    y=trades.y,
+                    mode='markers',
+                    marker=dict(
+                        color=trades.color,
+                    ),
+                    hovertext=trades.hover,
+                    hoverlabel=dict(namelength=0),
+                    hovertemplate='%{hovertext}'
+                ),
+            ])
+    except:
+        import pdb; pdb.set_trace()
     fig.update_yaxes(fixedrange=False)
     fig.write_html("./tradingpretrain.html")
 

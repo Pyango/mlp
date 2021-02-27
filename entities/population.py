@@ -9,21 +9,31 @@ from entities.specie import Specie, DistanceCache
 class Population:
     last_species_count = 0
 
-    def __init__(self, num_inputs, num_outputs, initial_fitness, fitness_threshold, output_activation_functions,
-                 size=100, compatibility_threshold=3, survival_threshold=0, max_species=30,
-                 compatibility_threshold_mutate_power=.01):
-        self.size = size
-        self.initial_fitness = initial_fitness
-        self.fitness_threshold = fitness_threshold
+    def __init__(
+            self,
+            num_inputs,
+            num_outputs,
+            fitness_threshold,
+            initial_fitness,
+            output_activation_functions,
+            **kwargs
+    ):
         self.num_inputs = num_inputs
         self.num_outputs = num_outputs
+        self.fitness_threshold = fitness_threshold
+        self.initial_fitness = initial_fitness
+        self.output_activation_functions = output_activation_functions
+        self.size = kwargs.get('size', 100)
+        self.compatibility_threshold = kwargs.get('compatibility_threshold', 3)
+        self.survival_threshold = kwargs.get('survival_threshold', 3)
+        self.max_species = kwargs.get('survival_threshold', 10)
+        self.compatibility_threshold_mutate_power = kwargs.get('survival_threshold', 0.01)
+        self.generation = kwargs.get('initial_generation', 0)
+
+        # Structure
         self.genomes = {}
         self.species = {}
-        self.compatibility_threshold = compatibility_threshold
-        self.compatibility_threshold_mutate_power = compatibility_threshold_mutate_power
-        self.survival_threshold = survival_threshold
-        self.max_species = max_species
-        self.output_activation_functions = output_activation_functions
+
         for i in range(self.size):
             self.create_genome()
 
@@ -81,7 +91,7 @@ class Population:
                     worst = g
 
             if on_generation:
-                on_generation(generation, best)
+                on_generation(best, population=self)
 
             if best.fitness >= self.fitness_threshold:
                 break

@@ -35,8 +35,15 @@ class Genome:
     def __le__(self, other):
         return self.adjusted_fitness <= other
 
-    def __init__(self, key, num_inputs, num_outputs, initial_fitness, output_activation_functions,
-                 output_activation_function=None):
+    def __init__(
+            self,
+            key,
+            num_inputs,
+            num_outputs,
+            initial_fitness,
+            output_activation_functions,
+            output_activation_function=None
+    ):
         self.key = key
         self.connections = {}
         self.input_neurones = {}
@@ -299,9 +306,7 @@ class Genome:
                     neuron_distance += n1.distance(n2)
 
             max_neurones = max(len(self.neurones), len(other.neurones))
-            neuron_distance = (neuron_distance + (
-                    self.compatibility_disjoint_coefficient * disjoint_neurones)
-                               ) / max_neurones
+            neuron_distance = (neuron_distance + (self.compatibility_disjoint_coefficient * disjoint_neurones)) / max_neurones  # noqa
 
         # Compute connection gene differences.
         connection_distance = 0.0
@@ -320,9 +325,7 @@ class Genome:
                     connection_distance += c1.distance(c2)
 
             max_conn = max(len(self.connections), len(other.connections))
-            connection_distance = (connection_distance +
-                                   (self.compatibility_disjoint_coefficient *
-                                    disjoint_connections)) / max_conn
+            connection_distance = (connection_distance + (self.compatibility_disjoint_coefficient * disjoint_connections)) / max_conn  # noqa
 
         distance = neuron_distance + connection_distance
         return distance
