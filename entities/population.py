@@ -134,7 +134,7 @@ class Population:
             print(f'And the best genome is: {best.key} with a fitness of {best.fitness}'
                   f' and a complexity of {best.complexity} and adj fitness {best.adjusted_fitness}')
             if best.ancestors:
-                print(f'The ancestors of the best genome are', best.ancestors[0].key, best.ancestors[1].key)
+                print(f'The ancestors of the best genome are', best.ancestors[0], best.ancestors[1])
             print(f'And the worst genome is: {worst.key} with a fitness of {worst.fitness}'
                   f' and a complexity of {worst.complexity} and adj fitness {worst.adjusted_fitness}')
 
@@ -177,6 +177,7 @@ class Population:
             for genome in self.genomes.values():
                 genome.last_fitness = genome.fitness
 
+            self.generation += 1
             print(f"--- {time.time() - start_time} to eval the species and mutate ---")
         if on_success:
             on_success(best)

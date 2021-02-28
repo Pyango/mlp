@@ -365,4 +365,4 @@ class Genome:
                 # Homologous gene: combine genes from both parents.
                 self.connections[key] = connection1.crossover(connection2)
         self.output_activation_function = parent1.output_activation_function
-        self.ancestors = [parent1, parent2]
+        self.ancestors = [parent1.key, parent2.key]
