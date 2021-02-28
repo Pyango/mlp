@@ -55,7 +55,8 @@ def compute_fitness(genome):
 
         open_price = row.get('open')
         close_price = row.get('close')
-        if trading_decision == 0:
+        # [0, x, 0]
+        if trading_decision == 1:
             # We want to buy
             if fiat_account <= 0:
                 # print('We dont have any fiat money left!')
@@ -84,7 +85,8 @@ def compute_fitness(genome):
             else:
                 crypto_account -= trading_fee_crypto
 
-        elif trading_decision == 1:
+        # [0, 0, x]
+        elif trading_decision == 2:
             # We want to sell
             if crypto_account <= 0:
                 # print('We dont have any crypto left!')
@@ -113,7 +115,8 @@ def compute_fitness(genome):
             else:
                 crypto_account -= trading_fee_crypto
 
-        elif trading_decision == 2:
+        # [x, 0, 0]
+        elif trading_decision == 0:
             # print('Hold your horses we hang tight till the next trade!')
             continue
     # Sell all open crypto for the last closing price
