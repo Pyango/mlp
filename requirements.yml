@@ -10,3 +10,5 @@ dependencies:
       - graphviz
       - pykrakenapi
       - plotly
+      - gym
+      - box2d-py
