@@ -18,7 +18,7 @@ def test(best):
     close_price = 0
     for index, row in data.iterrows():
         # Define the inputs including our current account status
-        genome_input = list(row)[1:] + [fiat_account, crypto_account]
+        genome_input = list(row) + [fiat_account, crypto_account]
         prediction = best.activate(genome_input)
         trading_decision = np.argmax(prediction[:2])
         # TODO: Simpler method?
@@ -32,7 +32,8 @@ def test(best):
 
         open_price = row.get('open')
         close_price = row.get('close')
-        if trading_decision == 0:
+        # [0, x, 0]
+        if trading_decision == 1:
             # We want to buy
             if fiat_account <= 0:
                 print('We dont have any fiat money left!')
@@ -70,7 +71,8 @@ def test(best):
                 'color': 'green',
                 'hover': f'Fiat: {fiat_trade_amount}<br>Crypto: {amount_crypto_to_buy}<br>Trading fee fiat: {trading_fee_fiat}',
             }
-        elif trading_decision == 1:
+        # [0, 0, x]
+        elif trading_decision == 2:
             # We want to sell
             if crypto_account <= 0:
                 print('We dont have any crypto left!')
@@ -108,7 +110,8 @@ def test(best):
                 'color': 'red',
                 'hover': f'Fiat: {amount_crypto_to_sell * open_price}<br>Crypto: {amount_crypto_to_sell}<br>Trading fee fiat: {trading_fee_fiat}',
             }
-        elif trading_decision == 2:
+        # [x, 0, 0]
+        elif trading_decision == 0:
             print('Hold your horses we hang tight till the next trade!')
             continue
 

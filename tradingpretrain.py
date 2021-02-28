@@ -274,6 +274,7 @@ def on_generation(best, population):
     fig.write_html("./tradingpretrain.html")
     best_bot_outfile = open('15min-candle-trading-best-bot', 'wb')
     pickle.dump(best, best_bot_outfile)
+    best_bot_outfile.close()
 
 
 def on_success(best):
