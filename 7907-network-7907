@@ -1,0 +1,18 @@
+digraph {
+	edge [arrowhead=vee arrowsize=1]
+	-1 [label="In K=-1
+V=1.0"]
+	-2 [label="In K=-2
+V=1.0"]
+	1 [label="Out K=1
+V=0.0
+B=1.0"]
+	2 [label="K=2
+V=0.99
+B=2.86"]
+	-1 -> 1 [label="W=-3.31"]
+	-2 -> 1 [label="W=2.24"]
+	-2 -> 2 [label="W=-3.05"]
+	2 -> 1 [label="W=-3.54"]
+	-1 -> 2 [label="W=4.24"]
+}
