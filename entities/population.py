@@ -150,8 +150,8 @@ class Population:
                 reverse=False,
             )
 
-            # Mutate the best 10% - 40% of all genomes
-            for g in top_genomes[int(len(top_genomes) * .1): int(len(top_genomes) * .4)]:
+            # Mutate the best 20% - 60% of all genomes
+            for g in top_genomes[int(len(top_genomes) * .2): int(len(top_genomes) * .6)]:
                 g.mutate()
 
             # Crossover the best 0% - 10% of all genomes and delete the same amount of the worst ones
@@ -170,7 +170,8 @@ class Population:
             Kill stagnated genomes
             """
             for genome in [g for g in self.genomes.values()]:
-                if genome.generation > self.survival_threshold and genome.last_fitness >= genome.fitness:
+                if genome.generation > self.survival_threshold and genome.last_fitness >= genome.fitness \
+                        and genome.key != best.key:
                     del self.genomes[genome.key]
                     self.create_genome()
 

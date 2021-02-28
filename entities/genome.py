@@ -13,9 +13,9 @@ class Genome:
     compatibility_disjoint_coefficient = 1
     adjusted_fitness = None
     neuron_add_prob = .05
-    neuron_delete_prob = .05
+    neuron_delete_prob = .001
     conn_add_prob = .2
-    conn_delete_prob = .2
+    conn_delete_prob = .1
     output_activation_function_mutate_rate = 0.1
     generation = 0
     ancestors = None

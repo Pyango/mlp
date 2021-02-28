@@ -6,20 +6,20 @@ import numpy as np
 import pandas
 from pykrakenapi import KrakenAPI
 
-from entities.activation import sigmoid_activation, relu_activation
+from entities.activation import all_activation_functions
 from entities.population import Population
 
 population = Population(
     num_inputs=9,
     num_outputs=4,
     fitness_threshold=2000,  # fiat profit without fees the bot should target as good fitness
-    output_activation_functions=[sigmoid_activation, relu_activation],
+    output_activation_functions=all_activation_functions,
     initial_fitness=0,
     survival_threshold=3,  # How long networks survive before they stagnate and die
     compatibility_threshold=1,
-    max_species=20,
-    size=150,
-    compatibility_threshold_mutate_power=.2,
+    max_species=50,
+    size=600,
+    compatibility_threshold_mutate_power=.4,
 )
 
 api = krakenex.API()
