@@ -50,6 +50,7 @@ class Genome:
         self.output_neurones = {}
         self.hidden_neurones = {}
         self.fitness = initial_fitness
+        self.last_fitness = initial_fitness
         self.output_activation_functions = output_activation_functions
         if output_activation_function:
             self.output_activation_function = output_activation_function

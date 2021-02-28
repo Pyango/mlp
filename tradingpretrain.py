@@ -15,7 +15,7 @@ population = Population(
     fitness_threshold=2000,  # fiat profit without fees the bot should target as good fitness
     output_activation_functions=[sigmoid_activation, relu_activation],
     initial_fitness=0,
-    survival_threshold=3,
+    survival_threshold=3,  # How long networks survive before they stagnate and die
     compatibility_threshold=1,
     max_species=10,
     size=150,
@@ -132,7 +132,7 @@ def on_generation(best, population):
         else:
             if sum(genome.complexity) > sum(most_complex.complexity):
                 most_complex = genome
-                print(f'Most complex genome is {genome.key} with {genome.complexity}')
+                print(f'Most complex genome is {genome.key} with {genome.complexity} and age {genome.generation}')
 
     trades = pandas.DataFrame(columns=['x', 'y', 'color', 'hover'])
     fiat_account = 1000
@@ -184,7 +184,7 @@ def on_generation(best, population):
             else:
                 crypto_account -= trading_fee_crypto
 
-            trades.iloc[index] = {
+            trades.loc[index] = {
                 'x': index,
                 'y': open_price,
                 'color': 'green',
@@ -219,7 +219,7 @@ def on_generation(best, population):
             else:
                 crypto_account -= trading_fee_crypto
 
-            trades.iloc[index] = {
+            trades.loc[index] = {
                 'x': index,
                 'y': open_price,
                 'color': 'red',
@@ -235,12 +235,12 @@ def on_generation(best, population):
         fiat_account += fiat_trade_amount
         # Trading fees
         trading_fee_fiat = fiat_trade_amount * trading_fee_percent
-        trades.iloc[data.index[-1]] = {
-            'x': data.index[-1],
-            'y': close_price,
-            'color': 'red',
-            'hover': f'Fiat: {fiat_trade_amount}<br>Crypto: {crypto_account}<br>Trading fees fiat: {trading_fee_fiat}',
-        }
+        trades.loc[data.index[-1]] = [
+            data.index[-1],
+            close_price,
+            'red',
+            f'Fiat: {fiat_trade_amount}<br>Crypto: {crypto_account}<br>Trading fees fiat: {trading_fee_fiat}',
+        ]
     try:
         fig = go.Figure(
             data=[

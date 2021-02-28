@@ -75,7 +75,7 @@ class Population:
 
             # Execute the custom implemented fitness function from the developer
             start_time = time.time()
-            with Pool(4) as p:
+            with Pool() as p:
                 results = p.map(compute_fitness, self.genomes.values())
                 self.genomes = {g.key: g for g in results}
             print(f"--- {time.time() - start_time} seconds for compute fitness ---")
@@ -166,14 +166,17 @@ class Population:
                 new_genome.mutate()
                 del self.genomes[bad_genome.key]
 
-            # Delete the worst 10% genomes and let them rebirth: stagnation mechanism
-            for g in bad_genomes[int(len(bad_genomes) * .0): int(len(bad_genomes) * .1)]:
-                if g.key in self.genomes:
-                    if self.genomes[g.key].generation > self.survival_threshold:
-                        del self.genomes[g.key]
-                        self.create_genome()
-                    else:
-                        g.mutate()
+            """
+            Kill stagnated genomes
+            """
+            for genome in [g for g in self.genomes.values()]:
+                if genome.generation > self.survival_threshold and genome.last_fitness >= genome.fitness:
+                    del self.genomes[genome.key]
+                    self.create_genome()
+
+            for genome in self.genomes.values():
+                genome.last_fitness = genome.fitness
+
             print(f"--- {time.time() - start_time} to eval the species and mutate ---")
         if on_success:
             on_success(best)
