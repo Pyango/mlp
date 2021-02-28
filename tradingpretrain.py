@@ -17,8 +17,8 @@ population = Population(
     initial_fitness=0,
     survival_threshold=3,  # How long networks survive before they stagnate and die
     compatibility_threshold=1,
-    max_species=8,
-    size=20,
+    max_species=20,
+    size=150,
     compatibility_threshold_mutate_power=.2,
 )
 
