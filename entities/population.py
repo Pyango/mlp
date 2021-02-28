@@ -75,8 +75,8 @@ class Population:
 
             # Execute the custom implemented fitness function from the developer
             start_time = time.time()
-            with Pool(4) as p:
-                results = p.imap(compute_fitness, self.genomes.values(), 40)
+            with Pool() as p:
+                results = p.imap(compute_fitness, self.genomes.values())
                 self.genomes = {g.key: g for g in results}
             print(f"--- {time.time() - start_time} seconds for compute fitness ---")
 
