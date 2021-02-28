@@ -1,10 +1,11 @@
+import logging
 import multiprocessing
 import pickle
-import plotly.graph_objects as go
-import krakenex
+
 import numpy as np
 import pandas
-from pykrakenapi import KrakenAPI
+import plotly.graph_objects as go
+from daemonize import Daemonize
 
 from entities.activation import all_activation_functions
 from entities.population import Population
@@ -22,8 +23,6 @@ population = Population(
     compatibility_threshold_mutate_power=.4,
 )
 
-api = krakenex.API()
-k = KrakenAPI(api)
 predictions = {}
 
 data = pandas.read_pickle("./etheur-15min-candles.pkl")
@@ -43,7 +42,7 @@ def compute_fitness(genome):
         # Define the inputs including our current account status
         genome_input = list(row) + [fiat_account, crypto_account]
         prediction = genome.activate(genome_input)
-        trading_decision = np.argmax(prediction[:2])
+        trading_decision = np.argmax(prediction[:3])
         # TODO: Simpler method?
         if prediction[3] >= 1:
             trade_size_percentage = 1
@@ -145,7 +144,7 @@ def on_generation(best, population):
         # Define the inputs including our current account status
         genome_input = list(row) + [fiat_account, crypto_account]
         prediction = best.activate(genome_input)
-        trading_decision = np.argmax(prediction[:2])
+        trading_decision = np.argmax(prediction[:3])
         # TODO: Simpler method?
         if prediction[3] >= 1:
             trade_size_percentage = 1
@@ -272,7 +271,8 @@ def on_generation(best, population):
                 ),
             ])
     except:
-        import pdb; pdb.set_trace()
+        import pdb;
+        pdb.set_trace()
     fig.update_yaxes(fixedrange=False)
     fig.write_html("./tradingpretrain.html")
     best_bot_outfile = open('15min-candle-trading-best-bot', 'wb')
@@ -296,3 +296,14 @@ def run():
 
 if __name__ == '__main__':
     run()
+    # pid = "/tmp/tradingpretrain.pid"
+    # logger = logging.getLogger(__name__)
+    # logger.setLevel(logging.DEBUG)
+    # logger.propagate = False
+    # fh = logging.FileHandler("/tmp/test.log", "w")
+    # fh.setLevel(logging.DEBUG)
+    # logger.addHandler(fh)
+    # keep_fds = [fh.stream.fileno()]
+    #
+    # daemon = Daemonize(app="test_app", pid=pid, action=run, keep_fds=keep_fds)
+    # daemon.start()

@@ -20,7 +20,7 @@ def test(best):
         # Define the inputs including our current account status
         genome_input = list(row) + [fiat_account, crypto_account]
         prediction = best.activate(genome_input)
-        trading_decision = np.argmax(prediction[:2])
+        trading_decision = np.argmax(prediction[:3])
         # TODO: Simpler method?
         if prediction[3] >= 1:
             trade_size_percentage = 1
