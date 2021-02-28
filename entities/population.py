@@ -75,8 +75,8 @@ class Population:
 
             # Execute the custom implemented fitness function from the developer
             start_time = time.time()
-            with Pool() as p:
-                results = p.map(compute_fitness, self.genomes.values())
+            with Pool(4) as p:
+                results = p.imap(compute_fitness, self.genomes.values(), 40)
                 self.genomes = {g.key: g for g in results}
             print(f"--- {time.time() - start_time} seconds for compute fitness ---")
 
@@ -150,8 +150,8 @@ class Population:
                 reverse=False,
             )
 
-            # Mutate the best 20% - 40% of all genomes
-            for g in top_genomes[int(len(top_genomes) * .2): int(len(top_genomes) * .4)]:
+            # Mutate the best 10% - 40% of all genomes
+            for g in top_genomes[int(len(top_genomes) * .1): int(len(top_genomes) * .4)]:
                 g.mutate()
 
             # Crossover the best 0% - 10% of all genomes and delete the same amount of the worst ones
