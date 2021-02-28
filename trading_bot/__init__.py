@@ -1,4 +1,3 @@
-from time import sleep
 from datetime import timedelta, datetime
 import krakenex
 from pykrakenapi import KrakenAPI
@@ -6,7 +5,7 @@ from pykrakenapi import KrakenAPI
 api = krakenex.API()
 k = KrakenAPI(api)
 now = datetime.now()
-last_interval = now - timedelta(days=2)
+last_interval = now - timedelta(days=30)
 timestamp = datetime.timestamp(last_interval)
 
 # Get the ETHEUR prices for the last few days

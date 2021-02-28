@@ -10,15 +10,15 @@ from entities.activation import all_activation_functions
 from entities.population import Population
 
 population = Population(
-    num_inputs=9,
+    num_inputs=10,
     num_outputs=4,
     fitness_threshold=2000,  # fiat profit without fees the bot should target as good fitness
     output_activation_functions=all_activation_functions,
     initial_fitness=0,
     survival_threshold=10,  # How long networks survive before they stagnate and die
     compatibility_threshold=1,
-    max_species=50,
-    size=600,
+    max_species=20,
+    size=150,
     compatibility_threshold_mutate_power=.4,
 )
 
@@ -41,7 +41,7 @@ def compute_fitness(genome):
     close_price = 0
     for index, row in data.iterrows():
         # Define the inputs including our current account status
-        genome_input = list(row)[1:] + [fiat_account, crypto_account]
+        genome_input = list(row) + [fiat_account, crypto_account]
         prediction = genome.activate(genome_input)
         trading_decision = np.argmax(prediction[:2])
         # TODO: Simpler method?
@@ -269,6 +269,8 @@ def on_generation(best, population):
         import pdb; pdb.set_trace()
     fig.update_yaxes(fixedrange=False)
     fig.write_html("./tradingpretrain.html")
+    best_bot_outfile = open('15min-candle-trading-best-bot', 'wb')
+    pickle.dump(best, best_bot_outfile)
 
 
 def on_success(best):
@@ -282,7 +284,7 @@ def on_success(best):
 
 def run():
     multiprocessing.freeze_support()
-    population.run(compute_fitness, on_success, on_generation, generations=1000)
+    population.run(compute_fitness, on_success, on_generation, generations=10000)
 
 
 if __name__ == '__main__':

@@ -6,3 +6,4 @@ env
 build
 *.so
 *.c
+*.html
