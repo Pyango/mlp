@@ -12,3 +12,4 @@ dependencies:
       - plotly
       - gym
       - box2d-py
+      - daemonize

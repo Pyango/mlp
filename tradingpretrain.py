@@ -35,7 +35,9 @@ trading_fee_percent = 0.0016
 
 def compute_fitness(genome):
     genome.fitness = 0
-    fiat_account = 1000
+    penalty = 0
+    initial_budget = 1000
+    fiat_account = initial_budget
     crypto_account = 0
     close_price = 0
     for index, row in data.iterrows():
@@ -59,10 +61,13 @@ def compute_fitness(genome):
             # We want to buy
             if fiat_account <= 0:
                 # print('We dont have any fiat money left!')
+                # Penalty for trying to trade without money
+                fiat_account -= penalty
                 continue
             # Make a trade for the open price
             if not fiat_trade_amount:
                 # print('We cant make a trade for nothing!')
+                fiat_account -= penalty
                 continue
 
             # In case we want to sell more fiat than we have
@@ -89,10 +94,12 @@ def compute_fitness(genome):
             # We want to sell
             if crypto_account <= 0:
                 # print('We dont have any crypto left!')
+                fiat_account -= penalty
                 continue
             # Make a trade for the open price
             if not fiat_trade_amount:
                 # print('We cant make a trade for nothing!')
+                fiat_account -= penalty
                 continue
 
             amount_crypto_to_sell = fiat_trade_amount / open_price
@@ -122,7 +129,7 @@ def compute_fitness(genome):
     if crypto_account > 0:
         fiat_account += crypto_account * close_price
         crypto_account = 0
-    genome.fitness = fiat_account
+    genome.fitness = fiat_account - initial_budget
     return genome
 
 

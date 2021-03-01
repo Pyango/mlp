@@ -8,6 +8,7 @@ from entities.specie import Specie, DistanceCache
 
 class Population:
     last_species_count = 0
+    nr_offsprings = .5  # 20% of all genomes produce offsprings
 
     def __init__(
             self,
@@ -154,22 +155,22 @@ class Population:
                 g.mutate()
 
             # Crossover the best 0% - 10% of all genomes and delete the same amount of the worst ones
-            crossover_genomes = top_genomes[int(len(top_genomes) * .0): int(len(top_genomes) * .1)]
-            genomes_to_delete = bad_genomes[int(len(bad_genomes) * .1): int(len(bad_genomes) * .2)]
+            crossover_genomes = top_genomes[int(len(top_genomes) * .0): int(len(top_genomes) * .5)]
+            genomes_to_delete = bad_genomes[int(len(bad_genomes) * .0): int(len(bad_genomes) * .2)]
 
             for bad_genome in genomes_to_delete:
                 parent1 = random.choice(crossover_genomes)
                 parent2 = random.choice(crossover_genomes)
                 new_genome = self.create_genome()
                 new_genome.crossover(parent1, parent2)
-                new_genome.mutate()
+                new_genome.mutate()  # do we really have to mutate after crossover?
                 del self.genomes[bad_genome.key]
 
             """
             Kill stagnated genomes
             """
             for genome in [g for g in self.genomes.values()]:
-                if genome.generation > self.survival_threshold and genome.last_fitness >= genome.fitness \
+                if genome.generation > self.survival_threshold and genome.fitness <= genome.last_fitness \
                         and genome.key != best.key:
                     del self.genomes[genome.key]
                     self.create_genome()
