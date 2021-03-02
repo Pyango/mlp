@@ -1,3 +1,4 @@
+import os
 import logging
 import multiprocessing
 import pickle
@@ -10,6 +11,16 @@ from daemonize import Daemonize
 from entities.activation import all_activation_functions
 from entities.population import Population
 
+dir_path = os.path.dirname(os.path.realpath(__file__))
+pid = os.path.join(dir_path, 'tradingpretrain.pid')
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+logger.propagate = False
+fh = logging.FileHandler(os.path.join(dir_path, 'tradingpretrain.log'), 'w')
+fh.setLevel(logging.DEBUG)
+logger.addHandler(fh)
+keep_fds = [fh.stream.fileno()]
+
 population = Population(
     num_inputs=10,
     num_outputs=4,
@@ -21,11 +32,12 @@ population = Population(
     max_species=20,
     size=150,
     compatibility_threshold_mutate_power=.4,
+    logger=logger,
 )
 
 predictions = {}
 
-data = pandas.read_pickle("./etheur-15min-candles.pkl")
+data = pandas.read_pickle(os.path.join(dir_path, 'etheur-15min-candles.pkl'))
 # Make sure we train in the correct order
 data.sort_index(inplace=True)
 trade_size_fiat = 100
@@ -141,7 +153,7 @@ def on_generation(best, population):
         else:
             if sum(genome.complexity) > sum(most_complex.complexity):
                 most_complex = genome
-                print(f'Most complex genome is {genome.key} with {genome.complexity} and age {genome.generation}')
+                logger.debug(f'Most complex genome is {genome.key} with {genome.complexity} and age {genome.generation}')
 
     trades = pandas.DataFrame(columns=['x', 'y', 'color', 'hover'])
     fiat_account = 1000
@@ -281,15 +293,15 @@ def on_generation(best, population):
         import pdb;
         pdb.set_trace()
     fig.update_yaxes(fixedrange=False)
-    fig.write_html("./tradingpretrain.html")
-    best_bot_outfile = open('15min-candle-trading-best-bot', 'wb')
+    fig.write_html(os.path.join(dir_path, 'tradingpretrain.html'))
+    best_bot_outfile = open(os.path.join(dir_path, '15min-candle-trading-best-bot'), 'wb')
     pickle.dump(best, best_bot_outfile)
     best_bot_outfile.close()
 
 
 def on_success(best):
-    best_bot_outfile = open('15min-candle-trading-best-bot', 'wb')
-    population_outfile = open('15min-candle-trading-population', 'wb')
+    best_bot_outfile = open(os.path.join(dir_path, '15min-candle-trading-best-bot'), 'wb')
+    population_outfile = open(os.path.join(dir_path, '15min-candle-trading-population'), 'wb')
     pickle.dump(best, best_bot_outfile)
     pickle.dump(population, population_outfile)
     best_bot_outfile.close()
@@ -302,15 +314,6 @@ def run():
 
 
 if __name__ == '__main__':
-    run()
-    # pid = "/tmp/tradingpretrain.pid"
-    # logger = logging.getLogger(__name__)
-    # logger.setLevel(logging.DEBUG)
-    # logger.propagate = False
-    # fh = logging.FileHandler("/tmp/test.log", "w")
-    # fh.setLevel(logging.DEBUG)
-    # logger.addHandler(fh)
-    # keep_fds = [fh.stream.fileno()]
-    #
-    # daemon = Daemonize(app="test_app", pid=pid, action=run, keep_fds=keep_fds)
-    # daemon.start()
+    # Set foreground to test the Daemonize
+    daemon = Daemonize(app="tradingpretrain", pid=pid, action=run, keep_fds=keep_fds, foreground=False)
+    daemon.start()
