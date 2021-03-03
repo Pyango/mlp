@@ -78,9 +78,13 @@ class Population:
 
             # Execute the custom implemented fitness function from the developer
             start_time = time.time()
-            with Pool() as p:
-                results = p.imap(compute_fitness, self.genomes.values())
-                self.genomes = {g.key: g for g in results}
+            try:
+                with Pool() as p:
+                    results = p.imap(compute_fitness, self.genomes.values())
+                    self.genomes = {g.key: g for g in results}
+            except Exception as e:
+                self.logger.debug(e)
+                self.logger.debug('Continue with old genomes and try another mutation round!')
             self.logger.debug(f"--- {time.time() - start_time} seconds for compute fitness ---")
 
             start_time = time.time()
@@ -94,7 +98,10 @@ class Population:
                     worst = g
 
             if on_generation:
-                on_generation(best, population=self)
+                try:
+                    on_generation(best, population=self)
+                except Exception as e:
+                    self.logger.debug(e)
 
             if best.fitness >= self.fitness_threshold:
                 break

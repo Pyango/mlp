@@ -265,37 +265,34 @@ def on_generation(best, population):
             'red',
             f'Fiat: {fiat_trade_amount}<br>Crypto: {crypto_account}<br>Trading fees fiat: {trading_fee_fiat}',
         ]
-    try:
-        fig = go.Figure(
-            data=[
-                go.Candlestick(
-                    x=data.index,
-                    open=data['open'],
-                    high=data['high'],
-                    low=data['low'],
-                    close=data['close'],
-                    increasing_line_color='cyan',
-                    decreasing_line_color='gray',
+    fig = go.Figure(
+        data=[
+            go.Candlestick(
+                x=data.index,
+                open=data['open'],
+                high=data['high'],
+                low=data['low'],
+                close=data['close'],
+                increasing_line_color='cyan',
+                decreasing_line_color='gray',
+            ),
+            go.Scatter(
+                x=trades.x,
+                y=trades.y,
+                mode='markers',
+                marker=dict(
+                    color=trades.color,
                 ),
-                go.Scatter(
-                    x=trades.x,
-                    y=trades.y,
-                    mode='markers',
-                    marker=dict(
-                        color=trades.color,
-                    ),
-                    hovertext=trades.hover,
-                    hoverlabel=dict(namelength=0),
-                    hovertemplate='%{hovertext}'
-                ),
-            ])
-        fig.update_yaxes(fixedrange=False)
-        fig.write_html(os.path.join(dir_path, 'tradingpretrain.html'))
-        best_bot_outfile = open(os.path.join(dir_path, '15min-candle-trading-best-bot'), 'wb')
-        pickle.dump(best, best_bot_outfile)
-        best_bot_outfile.close()
-    except Exception as e:
-        logger.debug(e)
+                hovertext=trades.hover,
+                hoverlabel=dict(namelength=0),
+                hovertemplate='%{hovertext}'
+            ),
+        ])
+    fig.update_yaxes(fixedrange=False)
+    fig.write_html(os.path.join(dir_path, 'tradingpretrain.html'))
+    best_bot_outfile = open(os.path.join(dir_path, '15min-candle-trading-best-bot'), 'wb')
+    pickle.dump(best, best_bot_outfile)
+    best_bot_outfile.close()
 
 
 def on_success(best):
