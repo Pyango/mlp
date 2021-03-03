@@ -9,3 +9,4 @@ build
 *.html
 *.log
 best-*
+*.pid
