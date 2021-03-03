@@ -61,6 +61,7 @@ class Genome:
         for i in range(num_inputs):
             n = Neuron(
                 key=-i - 1,
+                bias=random(),
             )
             self.input_neurones[n.key] = n
 
@@ -68,7 +69,8 @@ class Genome:
         for i in range(num_outputs):
             n = Neuron(
                 key=i + 1,
-                output=True
+                output=True,
+                bias=random(),
             )
             self.output_neurones[n.key] = n
 

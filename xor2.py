@@ -1,4 +1,6 @@
+import logging
 import multiprocessing
+import os
 import pickle
 
 from entities.activation import sigmoid_activation
@@ -36,6 +38,14 @@ nand = [
     [1, 1, 1],
 ]
 
+dir_path = os.path.dirname(os.path.realpath(__file__))
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+logger.propagate = False
+fh = logging.FileHandler(os.path.join(dir_path, 'xor2.log'), 'w')
+fh.setLevel(logging.DEBUG)
+logger.addHandler(fh)
+
 population = Population(
     num_inputs=2,
     num_outputs=1,
@@ -47,6 +57,7 @@ population = Population(
     size=150,
     output_activation_functions=[sigmoid_activation],
     compatibility_threshold_mutate_power=.1,
+    logger=logger,
 )
 
 

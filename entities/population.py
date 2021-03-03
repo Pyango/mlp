@@ -145,7 +145,7 @@ class Population:
             self.logger.debug(f'And the best genome is: {best.key} with a fitness of {best.fitness}'
                               f' and a complexity of {best.complexity} and adj fitness {best.adjusted_fitness}')
             if best.ancestors:
-                self.logger.debug(f'The ancestors of the best genome are', best.ancestors[0], best.ancestors[1])
+                self.logger.debug(f'The ancestors of the best genome are {best.ancestors[0]} and {best.ancestors[1]}')
             self.logger.debug(f'And the worst genome is: {worst.key} with a fitness of {worst.fitness}'
                               f' and a complexity of {worst.complexity} and adj fitness {worst.adjusted_fitness}')
 
@@ -166,8 +166,8 @@ class Population:
                 g.mutate()
 
             # Crossover the best 0% - 10% of all genomes and delete the same amount of the worst ones
-            crossover_genomes = top_genomes[int(len(top_genomes) * .0): int(len(top_genomes) * .5)]
-            genomes_to_delete = bad_genomes[int(len(bad_genomes) * .0): int(len(bad_genomes) * .2)]
+            crossover_genomes = top_genomes[int(len(top_genomes) * .0): int(len(top_genomes) * .1)]
+            genomes_to_delete = bad_genomes[int(len(bad_genomes) * .0): int(len(bad_genomes) * .1)]
 
             for bad_genome in genomes_to_delete:
                 parent1 = random.choice(crossover_genomes)
