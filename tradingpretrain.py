@@ -289,14 +289,13 @@ def on_generation(best, population):
                     hovertemplate='%{hovertext}'
                 ),
             ])
-    except:
-        import pdb;
-        pdb.set_trace()
-    fig.update_yaxes(fixedrange=False)
-    fig.write_html(os.path.join(dir_path, 'tradingpretrain.html'))
-    best_bot_outfile = open(os.path.join(dir_path, '15min-candle-trading-best-bot'), 'wb')
-    pickle.dump(best, best_bot_outfile)
-    best_bot_outfile.close()
+        fig.update_yaxes(fixedrange=False)
+        fig.write_html(os.path.join(dir_path, 'tradingpretrain.html'))
+        best_bot_outfile = open(os.path.join(dir_path, '15min-candle-trading-best-bot'), 'wb')
+        pickle.dump(best, best_bot_outfile)
+        best_bot_outfile.close()
+    except Exception as e:
+        logger.debug(e)
 
 
 def on_success(best):
