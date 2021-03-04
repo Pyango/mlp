@@ -1,13 +1,13 @@
 from random import random, choice
 
-from entities.activation import relu_activation, all_activation_functions
+from entities.activation import all_activation_functions, sigmoid_activation
 from entities.attribute import Attribute
 
 
 class Neuron:
     activation_function_mutate_rate = 0.1
 
-    def __init__(self, key, bias=1, output=False, activation_function=relu_activation):
+    def __init__(self, key, bias=1, output=False, activation_function=sigmoid_activation):
         self.key = key
         self.value = 0
         self.bias = Attribute(

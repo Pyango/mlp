@@ -1,4 +1,6 @@
 import random
+import time
+from multiprocessing import Pool
 
 from entities.genome import Genome
 from entities.specie import Specie, DistanceCache
@@ -7,21 +9,31 @@ from entities.specie import Specie, DistanceCache
 class Population:
     last_species_count = 0
 
-    def __init__(self, num_inputs, num_outputs, initial_fitness, fitness_threshold, output_activation_function,
-                 size=100, compatibility_threshold=3, survival_threshold=0, max_species=30,
-                 compatibility_threshold_mutate_power=.01):
-        self.size = size
-        self.initial_fitness = initial_fitness
-        self.fitness_threshold = fitness_threshold
+    def __init__(
+            self,
+            num_inputs,
+            num_outputs,
+            fitness_threshold,
+            initial_fitness,
+            output_activation_functions,
+            **kwargs
+    ):
         self.num_inputs = num_inputs
         self.num_outputs = num_outputs
+        self.fitness_threshold = fitness_threshold
+        self.initial_fitness = initial_fitness
+        self.output_activation_functions = output_activation_functions
+        self.size = kwargs.get('size', 100)
+        self.compatibility_threshold = kwargs.get('compatibility_threshold', 3)
+        self.survival_threshold = kwargs.get('survival_threshold', 3)
+        self.max_species = kwargs.get('survival_threshold', 10)
+        self.compatibility_threshold_mutate_power = kwargs.get('survival_threshold', 0.01)
+        self.generation = kwargs.get('initial_generation', 0)
+
+        # Structure
         self.genomes = {}
         self.species = {}
-        self.compatibility_threshold = compatibility_threshold
-        self.compatibility_threshold_mutate_power = compatibility_threshold_mutate_power
-        self.survival_threshold = survival_threshold
-        self.max_species = max_species
-        self.output_activation_function = output_activation_function
+
         for i in range(self.size):
             self.create_genome()
 
@@ -31,7 +43,7 @@ class Population:
             num_inputs=self.num_inputs,
             num_outputs=self.num_outputs,
             initial_fitness=self.initial_fitness,
-            output_activation_function=self.output_activation_function,
+            output_activation_functions=self.output_activation_functions,
         )
         self.genomes[genome.key] = genome
         return genome
@@ -46,23 +58,40 @@ class Population:
             return max(self.species.keys()) + 1
         return 1
 
-    def run(self, compute_fitness, on_success, generations=100):
+    def run(self, compute_fitness, on_success, on_generation=None, generations=100):
         for generation in range(generations):
-            # Execute the custom implemented fitness function from the developer
-            compute_fitness(self.genomes.items())
 
+            """
+            Print section
+            """
+
+            print('')
+            print('#######################')
+            print('')
+            print(f'Current Generation: {generation}')
+            print(f'Number of Species {len(self.species)}')
+            print(f'Number of Genomes {len(self.genomes)}')
+            print(f'Compatibility threshold {self.compatibility_threshold}')
+
+            # Execute the custom implemented fitness function from the developer
+            start_time = time.time()
+            with Pool() as p:
+                results = p.imap(compute_fitness, self.genomes.values())
+                self.genomes = {g.key: g for g in results}
+            print(f"--- {time.time() - start_time} seconds for compute fitness ---")
+
+            start_time = time.time()
             # Define the best genome
             best = None
+            worst = None
             for g in self.genomes.values():
                 if best is None or g.fitness > best.fitness:
                     best = g
+                if worst is None or g.fitness < worst.fitness:
+                    worst = g
 
-            # Some printing
-            print(f'Generation: {generation}')
-            print(f'And the best genome is: {best.key} with a fitness of {best.fitness}'
-                  f' and a complexity of {best.complexity} and adj fitness {best.adjusted_fitness}')
-            if best.ancestors:
-                print(f'The ancestors of the best genome are', best.ancestors[0].key, best.ancestors[1].key)
+            if on_generation:
+                on_generation(best, population=self)
 
             if best.fitness >= self.fitness_threshold:
                 break
@@ -90,8 +119,7 @@ class Population:
                             genome_to_species[og.key] = specie.key
 
             if len(self.species) > self.max_species:
-                self.compatibility_threshold += (len(
-                    self.species) - self.max_species) * self.compatibility_threshold_mutate_power
+                self.compatibility_threshold += (len(self.species) - self.max_species) * self.compatibility_threshold_mutate_power  # noqa
             self.last_species_count = len(self.species)
 
             # Compute adjusted fitness for each genome in each specie
@@ -101,13 +129,13 @@ class Population:
                     if genome == best:
                         print(f'Best {genome.key} is in specie {specie.key} with {len(specie.genomes)} members.')
 
-            """
-            Print section
-            """
-
-            print(f'Species {len(self.species)}')
-            print(f'Genomes {len(self.genomes)}')
-            print(f'Compatibility threshold {self.compatibility_threshold}')
+            # Some printing
+            print(f'And the best genome is: {best.key} with a fitness of {best.fitness}'
+                  f' and a complexity of {best.complexity} and adj fitness {best.adjusted_fitness}')
+            if best.ancestors:
+                print(f'The ancestors of the best genome are', best.ancestors[0], best.ancestors[1])
+            print(f'And the worst genome is: {worst.key} with a fitness of {worst.fitness}'
+                  f' and a complexity of {worst.complexity} and adj fitness {worst.adjusted_fitness}')
 
             """
             Crossover and mutation
@@ -121,8 +149,8 @@ class Population:
                 reverse=False,
             )
 
-            # Mutate the best 20% - 40% of all genomes
-            for g in top_genomes[int(len(top_genomes) * .2): int(len(top_genomes) * .4)]:
+            # Mutate the best 20% - 60% of all genomes
+            for g in top_genomes[int(len(top_genomes) * .2): int(len(top_genomes) * .6)]:
                 g.mutate()
 
             # Crossover the best 0% - 10% of all genomes and delete the same amount of the worst ones
@@ -137,14 +165,20 @@ class Population:
                 new_genome.mutate()
                 del self.genomes[bad_genome.key]
 
-            # Delete the worst 10% genomes and let them rebirth: stagnation mechanism
-            for g in bad_genomes[int(len(bad_genomes) * .0): int(len(bad_genomes) * .1)]:
-                if g.key in self.genomes:
-                    if self.genomes[g.key].generation > self.survival_threshold:
-                        del self.genomes[g.key]
-                        self.create_genome()
-                    else:
-                        g.mutate()
+            """
+            Kill stagnated genomes
+            """
+            for genome in [g for g in self.genomes.values()]:
+                if genome.generation > self.survival_threshold and genome.last_fitness >= genome.fitness \
+                        and genome.key != best.key:
+                    del self.genomes[genome.key]
+                    self.create_genome()
+
+            for genome in self.genomes.values():
+                genome.last_fitness = genome.fitness
+
+            self.generation += 1
+            print(f"--- {time.time() - start_time} to eval the species and mutate ---")
         if on_success:
             on_success(best)
         best.show()

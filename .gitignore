@@ -4,3 +4,6 @@
 __pycache__
 env
 build
+*.so
+*.c
+*.html
