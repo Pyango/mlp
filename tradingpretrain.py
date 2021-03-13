@@ -1,14 +1,13 @@
-import os
 import logging
 import multiprocessing
+import os
 import pickle
 
-import numpy as np
 import pandas
 import plotly.graph_objects as go
 from daemonize import Daemonize
 
-from entities.activation import all_activation_functions
+from entities.activation import clamped_activation
 from entities.population import Population
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -22,22 +21,26 @@ logger.addHandler(fh)
 keep_fds = [fh.stream.fileno()]
 
 population = Population(
-    num_inputs=10,
-    num_outputs=4,
+    num_inputs=7,
+    num_outputs=1,
     fitness_threshold=2000,  # fiat profit without fees the bot should target as good fitness
-    output_activation_functions=all_activation_functions,
+    output_activation_functions=[clamped_activation],
     initial_fitness=0,
-    survival_threshold=10,  # How long networks survive before they stagnate and die
+    survival_threshold=3,  # How long networks survive before they stagnate and die
     compatibility_threshold=1,
-    max_species=20,
-    size=150,
+    max_species=60,
+    size=600,
     compatibility_threshold_mutate_power=.4,
     logger=logger,
 )
 
 predictions = {}
 
-data = pandas.read_pickle(os.path.join(dir_path, 'etheur-15min-candles.pkl'))
+data = pandas.read_pickle(os.path.join(dir_path, 'etheur-15min-candles-2.pkl'))
+# Only get one day to train
+data = data[(data.index >= "2021-03-12") & (data.index < "2021-03-13")]
+# Remove unused columns
+data = data.drop(['time', 'vwap', 'count'], axis=1)
 # Make sure we train in the correct order
 data.sort_index(inplace=True)
 trade_size_fiat = 100
@@ -56,20 +59,13 @@ def compute_fitness(genome):
         # Define the inputs including our current account status
         genome_input = list(row) + [fiat_account, crypto_account]
         prediction = genome.activate(genome_input)
-        trading_decision = np.argmax(prediction[:3])
-        # TODO: Simpler method?
-        if prediction[3] >= 1:
-            trade_size_percentage = 1
-        elif prediction[3] <= 0:
-            trade_size_percentage = 0
-        else:
-            trade_size_percentage = prediction[3]
+        trading_decision = 'buy' if prediction[0] > 0 else 'sell' if prediction[0] < 0 else 'hold'
+        trade_size_percentage = abs(prediction[0])
         fiat_trade_amount = trade_size_fiat * trade_size_percentage
 
         open_price = row.get('open')
         close_price = row.get('close')
-        # [0, x, 0]
-        if trading_decision == 1:
+        if trading_decision == 'buy':
             # We want to buy
             if fiat_account <= 0:
                 # print('We dont have any fiat money left!')
@@ -101,8 +97,7 @@ def compute_fitness(genome):
             else:
                 crypto_account -= trading_fee_crypto
 
-        # [0, 0, x]
-        elif trading_decision == 2:
+        elif trading_decision == 'sell':
             # We want to sell
             if crypto_account <= 0:
                 # print('We dont have any crypto left!')
@@ -133,14 +128,13 @@ def compute_fitness(genome):
             else:
                 crypto_account -= trading_fee_crypto
 
-        # [x, 0, 0]
-        elif trading_decision == 0:
+        elif trading_decision == 'hold':
             # print('Hold your horses we hang tight till the next trade!')
             continue
     # Sell all open crypto for the last closing price
-    if crypto_account > 0:
-        fiat_account += crypto_account * close_price
-        crypto_account = 0
+    # if crypto_account > 0:
+    #     fiat_account += crypto_account * close_price
+    #     crypto_account = 0
     genome.fitness = fiat_account - initial_budget
     return genome
 
@@ -163,20 +157,14 @@ def on_generation(best, population):
         # Define the inputs including our current account status
         genome_input = list(row) + [fiat_account, crypto_account]
         prediction = best.activate(genome_input)
-        trading_decision = np.argmax(prediction[:3])
-        # TODO: Simpler method?
-        if prediction[3] >= 1:
-            trade_size_percentage = 1
-        elif prediction[3] <= 0:
-            trade_size_percentage = 0
-        else:
-            trade_size_percentage = prediction[3]
+        # Needs 0-1 activation function for outputs
+        trading_decision = 'buy' if prediction[0] > 0 else 'sell' if prediction[0] < 0 else 'hold'
+        trade_size_percentage = abs(prediction[0])
         fiat_trade_amount = trade_size_fiat * trade_size_percentage
 
         open_price = row.get('open')
         close_price = row.get('close')
-        # [0, x, 0]
-        if trading_decision == 1:
+        if trading_decision == 'buy':
             # We want to buy
             if fiat_account <= 0:
                 # print('We dont have any fiat money left!')
@@ -212,8 +200,7 @@ def on_generation(best, population):
                 'color': 'green',
                 'hover': f'Fiat: {fiat_trade_amount}<br>Crypto: {amount_crypto_to_buy}<br>Trading fee fiat: {trading_fee_fiat}',
             }
-        # [0, 0, x]
-        elif trading_decision == 2:
+        elif trading_decision == 'sell':
             # We want to sell
             if crypto_account <= 0:
                 # print('We dont have any crypto left!')
@@ -249,22 +236,22 @@ def on_generation(best, population):
                 'hover': f'Fiat: {amount_crypto_to_sell * open_price}<br>Crypto: {amount_crypto_to_sell}<br>Trading fee fiat: {trading_fee_fiat}',
             }
         # [x, 0, 0]
-        elif trading_decision == 0:
+        elif trading_decision == 'hold':
             # print('Hold your horses we hang tight till the next trade!')
             continue
 
     # Sell all open crypto for the last closing price
-    if crypto_account > 0:
-        fiat_trade_amount = crypto_account * close_price
-        fiat_account += fiat_trade_amount
-        # Trading fees
-        trading_fee_fiat = fiat_trade_amount * trading_fee_percent
-        trades.loc[data.index[-1]] = [
-            data.index[-1],
-            close_price,
-            'red',
-            f'Fiat: {fiat_trade_amount}<br>Crypto: {crypto_account}<br>Trading fees fiat: {trading_fee_fiat}',
-        ]
+    # if crypto_account > 0:
+    #     fiat_trade_amount = crypto_account * close_price
+    #     fiat_account += fiat_trade_amount
+    #     # Trading fees
+    #     trading_fee_fiat = fiat_trade_amount * trading_fee_percent
+    #     trades.loc[data.index[-1]] = [
+    #         data.index[-1],
+    #         close_price,
+    #         'red',
+    #         f'Fiat: {fiat_trade_amount}<br>Crypto: {crypto_account}<br>Trading fees fiat: {trading_fee_fiat}',
+    #     ]
     fig = go.Figure(
         data=[
             go.Candlestick(
