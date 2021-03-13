@@ -38,7 +38,7 @@ predictions = {}
 
 data = pandas.read_pickle(os.path.join(dir_path, 'etheur-15min-candles-2.pkl'))
 # Only get one day to train
-data = data[(data.index >= "2021-03-12") & (data.index < "2021-03-13")]
+# data = data[(data.index >= "2021-03-12") & (data.index < "2021-03-13")]
 # Remove unused columns
 data = data.drop(['time', 'vwap', 'count'], axis=1)
 # Make sure we train in the correct order
