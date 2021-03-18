@@ -92,5 +92,5 @@ def run():
 
 if __name__ == '__main__':
     # Set foreground to test the Daemonize
-    daemon = Daemonize(app="predict-price", pid=pid, action=run, keep_fds=keep_fds, foreground=True)
+    daemon = Daemonize(app="predict-price", pid=pid, action=run, keep_fds=keep_fds, foreground=False)
     daemon.start()
