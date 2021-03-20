@@ -4,8 +4,6 @@ import os
 import pickle
 
 import pandas
-import plotly.graph_objects as go
-from daemonize import Daemonize
 
 from entities.activation import all_activation_functions
 from entities.population import Population
@@ -33,8 +31,6 @@ population = Population(
     compatibility_threshold_mutate_power=.4,
     logger=logger,
 )
-
-predictions = {}
 
 data = pandas.read_pickle(os.path.join(dir_path, 'etheur-15min-candles-2.pkl'))
 # Only get one day to train
@@ -91,6 +87,4 @@ def run():
 
 
 if __name__ == '__main__':
-    # Set foreground to test the Daemonize
-    daemon = Daemonize(app="predict-price", pid=pid, action=run, keep_fds=keep_fds, foreground=False)
-    daemon.start()
+    run()

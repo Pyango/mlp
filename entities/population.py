@@ -181,7 +181,8 @@ class Population:
             Kill stagnated genomes
             """
             for genome in [g for g in self.genomes.values()]:
-                if genome.generation > self.survival_threshold and genome.fitness <= genome.last_fitness \
+                if genome.generation > self.survival_threshold \
+                        and genome.fitness <= genome.last_fitness \
                         and genome.key != best.key:
                     del self.genomes[genome.key]
                     self.create_genome()
