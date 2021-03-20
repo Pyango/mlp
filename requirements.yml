@@ -13,3 +13,4 @@ dependencies:
       - gym
       - box2d-py
       - daemonize
+      - supervisor
