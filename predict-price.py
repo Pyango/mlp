@@ -44,17 +44,19 @@ population = Population(
 def compute_fitness(genome):
     genome.fitness = 0
     last_open_price = None
+    last_prediction = None
     for index, row in data.iterrows():
         # Define the inputs including our current account status
         genome_input = list(row)
         prediction = genome.activate(genome_input)
         price_prediction = max(-1.0, min(1.0, prediction[0]))  # clamped
         open_price = row.get('open')
-        if last_open_price:
+        if last_open_price and last_prediction:
             result = 1 if open_price > last_open_price else -1 if open_price < last_open_price else 0
-            genome.fitness += result * price_prediction
+            genome.fitness += result * last_prediction
             # genome.fitness += (open_price - last_open_price) * price_prediction
         last_open_price = row.get('open')
+        last_prediction = price_prediction
     return genome
 
 
