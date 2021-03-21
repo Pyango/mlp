@@ -161,8 +161,8 @@ class Population:
                 reverse=False,
             )
 
-            # Mutate the best 20% - 60% of all genomes
-            for g in top_genomes[int(len(top_genomes) * .2): int(len(top_genomes) * .6)]:
+            # Mutate the best 10% - 90% of all genomes
+            for g in top_genomes[int(len(top_genomes) * .1): int(len(top_genomes) * .9)]:
                 g.mutate()
 
             # Crossover the best 0% - 10% of all genomes and delete the same amount of the worst ones

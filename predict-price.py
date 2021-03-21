@@ -18,20 +18,6 @@ fh.setLevel(logging.DEBUG)
 logger.addHandler(fh)
 keep_fds = [fh.stream.fileno()]
 
-population = Population(
-    num_inputs=5,
-    num_outputs=1,
-    fitness_threshold=2000,  # fiat profit without fees the bot should target as good fitness
-    output_activation_functions=all_activation_functions,
-    initial_fitness=0,
-    survival_threshold=3,  # How long networks survive before they stagnate and die
-    compatibility_threshold=1,
-    max_species=50,
-    size=300,
-    compatibility_threshold_mutate_power=.4,
-    logger=logger,
-)
-
 data = pandas.read_pickle(os.path.join(dir_path, 'etheur-15min-candles-2.pkl'))
 # Only get one day to train
 # data = data[(data.index >= "2021-03-12") & (data.index < "2021-03-13")]
@@ -39,6 +25,20 @@ data = pandas.read_pickle(os.path.join(dir_path, 'etheur-15min-candles-2.pkl'))
 data = data.drop(['time', 'vwap', 'count'], axis=1)
 # Make sure we train in the correct order
 data.sort_index(inplace=True)
+
+population = Population(
+    num_inputs=5,
+    num_outputs=1,
+    fitness_threshold=len(data) * .8,  # 80% correct
+    output_activation_functions=all_activation_functions,
+    initial_fitness=0,
+    survival_threshold=0,  # How long networks survive before they stagnate and die
+    compatibility_threshold=1,
+    max_species=50,
+    size=300,
+    compatibility_threshold_mutate_power=.4,
+    logger=logger,
+)
 
 
 def compute_fitness(genome):
@@ -51,7 +51,9 @@ def compute_fitness(genome):
         price_prediction = max(-1.0, min(1.0, prediction[0]))  # clamped
         open_price = row.get('open')
         if last_open_price:
-            genome.fitness += (open_price - last_open_price) * price_prediction
+            result = 1 if open_price > last_open_price else -1 if open_price < last_open_price else 0
+            genome.fitness += result * price_prediction
+            # genome.fitness += (open_price - last_open_price) * price_prediction
         last_open_price = row.get('open')
     return genome
 
