@@ -92,14 +92,14 @@ def run():
             population = Population(
                 num_inputs=5,
                 num_outputs=1,
-                fitness_threshold=i - 0.01,  # 80% correct
+                fitness_threshold=i - 0.01,  # 99% correct
                 output_activation_functions=all_activation_functions,
                 output_activation_function=clamped_activation,
                 initial_fitness=0,
                 survival_threshold=3,  # How long networks survive before they stagnate and die
                 compatibility_threshold=1,
-                max_species=10,
-                size=50,
+                max_species=50,
+                size=300,
                 compatibility_threshold_mutate_power=4,
                 logger=logger,
                 data=sample,
