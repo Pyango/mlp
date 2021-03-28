@@ -17,6 +17,7 @@ class Population:
             fitness_threshold,
             initial_fitness,
             output_activation_functions,
+            output_activation_function,
             logger,
             **kwargs
     ):
@@ -25,12 +26,14 @@ class Population:
         self.fitness_threshold = fitness_threshold
         self.initial_fitness = initial_fitness
         self.output_activation_functions = output_activation_functions
+        self.output_activation_function = output_activation_function
         self.size = kwargs.get('size', 100)
         self.compatibility_threshold = kwargs.get('compatibility_threshold', 3)
         self.survival_threshold = kwargs.get('survival_threshold', 3)
-        self.max_species = kwargs.get('survival_threshold', 10)
-        self.compatibility_threshold_mutate_power = kwargs.get('survival_threshold', 0.01)
+        self.max_species = kwargs.get('max_species', 10)
+        self.compatibility_threshold_mutate_power = kwargs.get('compatibility_threshold_mutate_power', 0.01)
         self.generation = kwargs.get('initial_generation', 0)
+        self.data = kwargs.get('data')
         self.logger = logger
 
         # Structure
@@ -47,6 +50,7 @@ class Population:
             num_outputs=self.num_outputs,
             initial_fitness=self.initial_fitness,
             output_activation_functions=self.output_activation_functions,
+            output_activation_function=self.output_activation_function,
         )
         self.genomes[genome.key] = genome
         return genome
@@ -80,7 +84,8 @@ class Population:
             start_time = time.time()
             try:
                 with Pool() as p:
-                    results = p.imap(compute_fitness, self.genomes.values())
+                    data = [(g, self) for g in self.genomes.values()]
+                    results = p.starmap(compute_fitness, data)
                     self.genomes = {g.key: g for g in results}
             except Exception as e:
                 self.logger.debug(e)
@@ -96,15 +101,6 @@ class Population:
                     best = g
                 if worst is None or g.fitness < worst.fitness:
                     worst = g
-
-            if on_generation:
-                try:
-                    on_generation(best, population=self)
-                except Exception as e:
-                    self.logger.debug(e)
-
-            if best.fitness >= self.fitness_threshold:
-                break
 
             # Calculate the distances for speciation
             distances = DistanceCache()
@@ -149,6 +145,15 @@ class Population:
             self.logger.debug(f'And the worst genome is: {worst.key} with a fitness of {worst.fitness}'
                               f' and a complexity of {worst.complexity} and adj fitness {worst.adjusted_fitness}')
 
+            if on_generation:
+                try:
+                    on_generation(best, population=self)
+                except Exception as e:
+                    self.logger.debug(e)
+
+            if best.fitness >= self.fitness_threshold:
+                break
+
             """
             Crossover and mutation
             """
@@ -184,8 +189,12 @@ class Population:
                 if genome.generation > self.survival_threshold \
                         and genome.fitness <= genome.last_fitness \
                         and genome.key != best.key:
+                    parent1 = random.choice(crossover_genomes)
+                    parent2 = random.choice(crossover_genomes)
+                    new_genome = self.create_genome()
+                    new_genome.crossover(parent1, parent2)
+                    new_genome.mutate()  # do we really have to mutate after crossover?
                     del self.genomes[genome.key]
-                    self.create_genome()
 
             for genome in self.genomes.values():
                 genome.last_fitness = genome.fitness
@@ -193,5 +202,5 @@ class Population:
             self.generation += 1
             self.logger.debug(f"--- {time.time() - start_time} to eval the species and mutate ---")
         if on_success:
-            on_success(best)
+            on_success(best, population=self)
         best.show()

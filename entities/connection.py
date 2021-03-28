@@ -18,6 +18,7 @@ class Connection:
             mutate_power=0.8,
             replace_rate=0.1,
         )
+        self.deactivated = False
 
     def __repr__(self):
         return self.__str__()

@@ -109,11 +109,12 @@ class Genome:
         results = [neurone.bias]
         # Check if there are connections with unactivated neurones and call the function again
         for c in self.connections.values():
-            if c.output_key == neurone.key:
-                input_neurone = self.neurones[c.input_key]
-                if not input_neurone.activated:
-                    self.activate_neurone(input_neurone)
-                results.append(input_neurone.value * c.weight)
+            if not c.deactivated:
+                if c.output_key == neurone.key:
+                    input_neurone = self.neurones[c.input_key]
+                    if not input_neurone.activated and not input_neurone.deactivated:
+                        self.activate_neurone(input_neurone)
+                    results.append(input_neurone.value * c.weight)
         # Activate the neurone
         if not neurone.output:
             neurone.value = neurone.activation_function(sum(results))
@@ -198,8 +199,8 @@ class Genome:
                 if del_key in ck:
                     connections_to_delete.append(ck)
             for ck in connections_to_delete:
-                del self.connections[ck]
-            del self.hidden_neurones[del_key]
+                self.connections[ck].deactivated = True
+            self.hidden_neurones[del_key].deactivated = True
 
     def mutate_add_connection(self):
         """
@@ -256,7 +257,7 @@ class Genome:
                 return
             if self.connections[del_key].output_key in self.output_neurones.keys():
                 return
-            del self.connections[del_key]
+            self.connections[del_key].deactivated = True
 
     def mutate(self):
         """ Mutates this genome. """

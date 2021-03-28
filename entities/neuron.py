@@ -21,6 +21,7 @@ class Neuron:
         self.activated = False
         self.output = output
         self.activation_function = activation_function
+        self.deactivated = False
 
     def __repr__(self):
         return f"""Neuron(Key: {self.key}, Bias: {self.bias})"""

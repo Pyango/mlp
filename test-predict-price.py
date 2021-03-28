@@ -7,6 +7,7 @@ import plotly.graph_objects as go
 dir_path = os.path.dirname(os.path.realpath(__file__))
 data = pandas.read_pickle(os.path.join(dir_path, 'etheur-15min-candles-2.pkl'))
 data = data.drop(['time', 'vwap', 'count'], axis=1)
+data = data[(data.index >= "2021-03-12") & (data.index < "2021-03-13")]
 data.sort_index(inplace=True)
 
 
